@@ -105,6 +105,39 @@ def dashboard(request):
             'stable': {'val': most_stable_col.replace('Daging_','').replace('_',' '), 'unit': "Koef. variasi terendah secara nasional"}
         }
         
+        df['Month'] = df['Date'].dt.month
+        # Hitung rata-rata harga berdasarkan bulan kalender
+        df_season = df.groupby('Month')[['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']].mean().reset_index().sort_values('Month')
+        
+        months_name = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+        
+        def get_season_metrics(col):
+            min_val = df_season[col].min()
+            max_val = df_season[col].max()
+            min_month_idx = df_season[col].idxmin()
+            max_month_idx = df_season[col].idxmax()
+            amp = ((max_val - min_val) / min_val) * 100 # Perhitungan Amplitudo (%)
+            
+            return {
+                'min_month': months_name[int(df_season.loc[min_month_idx, 'Month']) - 1],
+                'max_month': months_name[int(df_season.loc[max_month_idx, 'Month']) - 1],
+                'amp': f"+{amp:.1f}%",
+                'data': df_season[col].tolist()
+            }
+            
+        scene3_metrics = {
+            'sapi': get_season_metrics('Daging_Sapi'),
+            'ayam': get_season_metrics('Daging_Ayam'),
+            'telur': get_season_metrics('Telur_Ayam')
+        }
+        
+        seasonal_data = {
+            'labels': months_name,
+            'sapi': scene3_metrics['sapi']['data'],
+            'ayam': scene3_metrics['ayam']['data'],
+            'telur': scene3_metrics['telur']['data']
+        }
+        
         
         # Data untuk Line Chart (Nasional)
         trend_data = {
@@ -122,6 +155,8 @@ def dashboard(request):
         'scene1_kpi': scene1_kpi,
         'scene2': scene2_metrics,
         'trend_json': json.dumps(trend_data),
+        'scene3_metrics': scene3_metrics,
+        'seasonal_json': json.dumps(seasonal_data),
         'map_data_json': json.dumps(map_data),
         'chart_data_json': json.dumps(chart_data),
         'geojson_data': json.dumps(geojson_data) # Mengirim GeoJSON ke template

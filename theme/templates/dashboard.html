@@ -149,9 +149,22 @@
 }
 #pm-wrapper .legend-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 
+/* TAMBAHAN CSS SCENE MUSIMAN */
+#pm-wrapper .sec-sage { background:#EEF5EC; }
+#pm-wrapper .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+
+/* CSS HEATMAP */
+#pm-wrapper .hm-wrap { overflow-x:auto; }
+#pm-wrapper .hm-table { border-collapse:separate; border-spacing:3px; width:100%; }
+#pm-wrapper .hm-th { font-size:9.5px; color:var(--text3); font-family:'DM Mono',monospace; text-align:center; padding:4px 6px; font-weight:500; }
+#pm-wrapper .hm-td-label { font-size:11px; color:var(--text2); font-family:'DM Mono',monospace; padding-right:10px; white-space:nowrap; font-weight:500; }
+#pm-wrapper .hm-cell { height:38px; min-width:48px; border-radius:4px; transition:opacity .15s,transform .15s; cursor:default; }
+#pm-wrapper .hm-cell:hover { opacity:.75; transform:scale(1.08); }
+
 @media(max-width:760px){
   #pm-wrapper .hero-kpi-row, #pm-wrapper .kpi-row, #pm-wrapper .grid2 { grid-template-columns:1fr; }
   #pm-wrapper nav, #pm-wrapper .container { padding:0 16px; }
+  #pm-wrapper .grid3 { grid-template-columns:1fr; }
 }
 </style>
 
@@ -365,6 +378,88 @@
       </div>
     </div>
   </section>
+
+  <section class="section sec-sage" id="s4" data-label="Musiman">
+    <div class="section-inner">
+      <div class="container">
+        <div class="reveal">
+          <div class="eyebrow">Pola Musiman</div>
+          <h2 class="sec-title">Bulan paling mahal<br><em>bisa diprediksi</em></h2>
+          <p class="sec-lead">Pola musiman dirangkum dari rata-rata harga tiap bulan kalender. Ini cermin dari perilaku pasar yang berulang setiap tahun yang dihitung dari dataset nyata.</p>
+        </div>
+
+        <div class="reveal">
+          <div class="chart-card" style="margin-bottom:0;">
+            <div class="chart-label">Heatmap intensitas harga per bulan kalender</div>
+            <div id="heatmap-wrap" style="margin-top:8px;overflow-x:auto;"></div>
+          </div>
+        </div>
+
+        <div class="grid3 reveal" style="margin-top:16px;">
+          <div class="kpi-card" style="padding:20px 22px;">
+            <div class="kpi-card-accent" style="background:var(--sapi);"></div>
+            <div style="font-size:9px;font-weight:700;color:var(--sage);font-family:'DM Mono',monospace;letter-spacing:.08em;margin-bottom:14px;text-transform:uppercase;">🐄 Daging Sapi</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(196,82,42,0.07);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Puncak harga</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--rust);">{{ scene3_metrics.sapi.max_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(90,122,82,0.08);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Harga termurah</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--sage);">{{ scene3_metrics.sapi.min_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--cream2);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Amplitudo musiman</span>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--brown);">{{ scene3_metrics.sapi.amp }}</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:10px;color:var(--text3);line-height:1.5;">Tren diolah langsung dari rentang (max-min) dataset.</div>
+          </div>
+          
+          <div class="kpi-card" style="padding:20px 22px;">
+            <div class="kpi-card-accent" style="background:var(--ayam);"></div>
+            <div style="font-size:9px;font-weight:700;color:var(--ayam);font-family:'DM Mono',monospace;letter-spacing:.08em;margin-bottom:14px;text-transform:uppercase;">🍗 Daging Ayam</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(196,82,42,0.07);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Puncak harga</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--rust);">{{ scene3_metrics.ayam.max_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(90,122,82,0.08);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Harga termurah</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--sage);">{{ scene3_metrics.ayam.min_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(196,82,42,0.1);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Amplitudo musiman</span>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--rust);">{{ scene3_metrics.ayam.amp }}</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:10px;color:var(--text3);line-height:1.5;">Pergerakan volatilitas harga per bulan kalender.</div>
+          </div>
+          
+          <div class="kpi-card" style="padding:20px 22px;">
+            <div class="kpi-card-accent" style="background:var(--telur);"></div>
+            <div style="font-size:9px;font-weight:700;color:var(--telur);font-family:'DM Mono',monospace;letter-spacing:.08em;margin-bottom:14px;text-transform:uppercase;">🥚 Telur Ayam</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(196,82,42,0.07);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Puncak harga</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--rust);">{{ scene3_metrics.telur.max_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(90,122,82,0.08);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Harga termurah</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--sage);">{{ scene3_metrics.telur.min_month }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--cream2);border-radius:7px;">
+                <span style="font-size:10.5px;color:var(--text2);font-weight:500;">Amplitudo musiman</span>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--brown);">{{ scene3_metrics.telur.amp }}</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:10px;color:var(--text3);line-height:1.5;">Pergerakan volatilitas harga per bulan kalender.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
 </div>
 
@@ -629,6 +724,51 @@ function updateLegendUI() {
 
 // Inisialisasi chart saat dokumen siap
 document.addEventListener('DOMContentLoaded', initTrendChart);
+</script>
+
+<script>
+  // --- LOGIKA HEATMAP POLA MUSIMAN ---
+const seasonalData = {{ seasonal_json|safe }};
+
+(function buildHeatmap() {
+  const hmContainer = document.getElementById('heatmap-wrap');
+  if(!hmContainer) return;
+
+  const rows = [
+    {label:'Sapi', data: seasonalData.sapi, color:'5A,7A,52'},
+    {label:'Ayam', data: seasonalData.ayam, color:'C9,95,2A'},
+    {label:'Telur', data: seasonalData.telur, color:'C4,52,2A'}
+  ];
+  
+  let html = '<div class="hm-wrap"><table class="hm-table"><thead><tr><th></th>';
+  seasonalData.labels.forEach(m => { html += `<th class="hm-th">${m}</th>`; });
+  html += '</tr></thead><tbody>';
+  
+  rows.forEach(row => {
+    // Cari rentang nilai min dan max untuk gradien warna
+    const minV = Math.min(...row.data);
+    const maxV = Math.max(...row.data);
+    const [rh,gh,bh] = row.color.split(',');
+    
+    html += `<tr><td class="hm-td-label">${row.label}</td>`;
+    
+    row.data.forEach((v, i) => {
+      // Hitung intensitas warna berdasarkan nilai
+      const intensity = (v - minV) / (maxV - minV);
+      const alpha = 0.1 + intensity * 0.85; 
+      const textC = intensity > 0.55 ? '#fff' : '#5C4A30'; // Teks putih jika gelap
+      
+      html += `<td><div class="hm-cell" style="background:rgba(${parseInt(rh,16)},${parseInt(gh,16)},${parseInt(bh,16)},${alpha.toFixed(2)});display:flex;align-items:center;justify-content:center;" 
+        title="${row.label} ${seasonalData.labels[i]}: Rp ${v.toLocaleString('id-ID')}">
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:${textC};font-weight:600;">${(v/1000).toFixed(0)}</span>
+      </div></td>`;
+    });
+    html += '</tr>';
+  });
+  
+  html += '</tbody></table></div>';
+  hmContainer.innerHTML = html;
+})();
 </script>
 
 {% endblock content %}
