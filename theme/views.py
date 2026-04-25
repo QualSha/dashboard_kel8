@@ -73,12 +73,55 @@ def dashboard(request):
         else:
             print("WARNING: File choropleth_map.geojson tidak ditemukan di path tersebut.")
 
+        # Scene 02
+        # --- PERHITUNGAN NASIONAL (TIME SERIES) ---
+        # Group by date untuk mendapatkan rata-rata harga nasional setiap harinya
+        df_nat = df.groupby('Date')[['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']].mean().reset_index().sort_values('Date')
+        
+        # Resample ke Bulanan untuk menghitung lonjakan (Spike) yang lebih stabil
+        df_monthly = df_nat.set_index('Date').resample('MS').mean()
+        
+        # 1. Lonjakan Paling Tajam (Month-over-Month)
+        mom_change = df_monthly.pct_change()
+        max_spike_val = mom_change.max().max() # Nilai % tertinggi
+        max_spike_col = mom_change.max().idxmax() # Komoditasnya
+        # Mencari periode terjadinya
+        spike_date = mom_change[max_spike_col].idxmax()
+        spike_period = f"{max_spike_col.replace('_',' ')}, {spike_date.strftime('%b')} {(spike_date - pd.DateOffset(months=1)).strftime('%b')} {spike_date.year}"
+
+        # 2. Kenaikan Kumulatif (Harga Akhir vs Harga Awal)
+        cum_change = (df_nat.iloc[-1][['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']] / df_nat.iloc[0][['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']]) - 1
+        max_cum_val = cum_change.max()
+        max_cum_col = cum_change.idxmax()
+        cum_period = f"{max_cum_col.replace('_',' ')}, {df_nat.iloc[0]['Date'].strftime('%b %Y')} vs {df_nat.iloc[-1]['Date'].strftime('%b %Y')}"
+
+        # 3. Koefisien Variasi (CV) = Std Dev / Mean (Makin kecil makin stabil)
+        cv = df_nat[['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']].std() / df_nat[['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']].mean()
+        most_stable_col = cv.idxmin()
+        
+        scene2_metrics = {
+            'spike': {'val': f"+{max_spike_val*100:.1f}%", 'unit': spike_period},
+            'cum': {'val': f"+{max_cum_val*100:.1f}%", 'unit': cum_period},
+            'stable': {'val': most_stable_col.replace('Daging_','').replace('_',' '), 'unit': "Koef. variasi terendah secara nasional"}
+        }
+        
+        
+        # Data untuk Line Chart (Nasional)
+        trend_data = {
+            'labels': df_nat['Date'].dt.strftime('%b %y').tolist(),
+            'sapi': df_nat['Daging_Sapi'].tolist(),
+            'ayam': df_nat['Daging_Ayam'].tolist(),
+            'telur': df_nat['Telur_Ayam'].tolist()
+        }
+        
     except Exception as e:
         print(f"Error pada views: {e}")
 
     context = {
         'hero': hero_stats,
         'scene1_kpi': scene1_kpi,
+        'scene2': scene2_metrics,
+        'trend_json': json.dumps(trend_data),
         'map_data_json': json.dumps(map_data),
         'chart_data_json': json.dumps(chart_data),
         'geojson_data': json.dumps(geojson_data) # Mengirim GeoJSON ke template

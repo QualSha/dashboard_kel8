@@ -116,11 +116,45 @@
 #pm-wrapper .reveal { opacity:0; transform:translateY(14px); transition:opacity .5s ease,transform .5s ease; }
 #pm-wrapper .reveal.visible { opacity:1; transform:none; }
 
+/* TAMBAHKAN CSS UNTUK KPI BADGE (POIN 1) & INSIGHT (POIN 5) YANG HILANG */
+#pm-wrapper .kpi-badge { display:inline-flex; align-items:center; gap:4px; font-size:9px; font-weight:600; font-family:'DM Mono',monospace; padding:2px 8px; border-radius:20px; }
+#pm-wrapper .kpi-badge.up { background:rgba(196,82,42,0.1); color:var(--rust); }
+#pm-wrapper .kpi-badge.dn { background:rgba(90,122,82,0.12); color:var(--sage); }
+
+#pm-wrapper .insight { background:var(--cream2); border-left:2.5px solid var(--rust); padding:10px 14px; border-radius:0 7px 7px 0; font-size:12px; color:var(--text2); line-height:1.7; margin-top:10px; }
+#pm-wrapper .insight strong { color:var(--brown); font-weight:600; }
+
+
+/* TIMPA/GANTI CSS EVENT LIST (POIN 4) & LEGEND (POIN 3) YANG LAMA DENGAN INI */
+#pm-wrapper .event-list { display:flex; flex-direction:column; gap:0; }
+#pm-wrapper .event-item { display:grid; grid-template-columns:80px 1fr; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); }
+#pm-wrapper .event-item:last-child { border-bottom:none; }
+#pm-wrapper .event-date { font-family:'DM Mono',monospace; font-size:9.5px; color:var(--rust); font-weight:500; padding-top:2px; }
+#pm-wrapper .event-desc { font-size:11.5px; color:var(--text2); line-height:1.5; }
+
+#pm-wrapper .legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+#pm-wrapper .legend-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+    font-size: 11px; 
+    color: var(--text2);
+    cursor: pointer; /* Agar terasa bisa diklik */
+    transition: opacity 0.3s ease;
+    user-select: none;
+}
+
+#pm-wrapper .legend-item.dimmed {
+    opacity: 0.25; /* Efek redup untuk legenda yang tidak aktif */
+}
+#pm-wrapper .legend-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
 @media(max-width:760px){
   #pm-wrapper .hero-kpi-row, #pm-wrapper .kpi-row, #pm-wrapper .grid2 { grid-template-columns:1fr; }
   #pm-wrapper nav, #pm-wrapper .container { padding:0 16px; }
 }
 </style>
+
 
 <div id="pm-wrapper">
   
@@ -260,6 +294,74 @@
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
         </div>
         
+      </div>
+    </div>
+  </section>
+
+  <section class="section sec-cream" id="s3" data-label="Tren">
+    <div class="section-inner">
+      <div class="container">
+        <div class="reveal">
+          <div class="eyebrow">Tren Waktu</div>
+          <h2 class="sec-title">Naik terus, atau ada <em>polanya?</em></h2>
+          <p class="sec-lead">Dari data periode berjalan, lonjakan harga bukan sekadar tren: ada ritme yang bisa dibaca melalui analisis volatilitas dan pergerakan kumulatif nasional.</p>
+        </div>
+
+        <div class="kpi-row reveal">
+          <div class="kpi-card">
+            <div class="kpi-card-accent" style="background:var(--ayam);"></div>
+            <div class="kpi-tag">Lonjakan paling tajam</div>
+            <div class="kpi-val">{{ scene2.spike.val }}</div>
+            <div class="kpi-unit">{{ scene2.spike.unit }}</div>
+            <div class="kpi-badge up" style="margin-top:5px;">Lorem Ipsum Spike</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-accent" style="background:var(--telur);"></div>
+            <div class="kpi-tag">Kenaikan kumulatif tertinggi</div>
+            <div class="kpi-val">{{ scene2.cum.val }}</div>
+            <div class="kpi-unit">{{ scene2.cum.unit }}</div>
+            <div class="kpi-badge up" style="margin-top:5px;">Lorem Ipsum Tren</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card-accent" style="background:var(--sapi);"></div>
+            <div class="kpi-tag">Paling stabil</div>
+            <div class="kpi-val">{{ scene2.stable.val }}</div>
+            <div class="kpi-unit">{{ scene2.stable.unit }}</div>
+            <div class="kpi-badge dn" style="margin-top:5px;">Lorem Ipsum Volatilitas</div>
+          </div>
+        </div>
+
+        <div class="grid2 reveal">
+          <div class="chart-card" style="margin-bottom:0;">
+            <div class="chart-label">Harga rata-rata nasional — Jan 2024 s.d. Apr 2026 (Rp/kg)</div>
+            
+            <div class="legend">
+              <span class="legend-item" id="leg-sapi" onclick="filterChart('sapi')">
+                <span class="legend-dot" style="background:var(--sapi)"></span>Daging sapi
+              </span>
+              <span class="legend-item" id="leg-ayam" onclick="filterChart('protein')">
+                <span class="legend-dot" style="background:var(--ayam)"></span>Daging ayam
+              </span>
+              <span class="legend-item" id="leg-telur" onclick="filterChart('protein')">
+                <span class="legend-dot" style="background:var(--telur)"></span>Telur ayam
+              </span>
+            </div>
+            <div class="chart-area" style="height:220px;"><canvas id="c3a"></canvas></div>
+          </div>
+          <div class="chart-card" style="margin-bottom:0;">
+            <div class="chart-label">Momen kunci yang membentuk harga</div>
+            <div class="event-list">
+              <div class="event-item"><span class="event-date">Momen 01</span><span class="event-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</span></div>
+              <div class="event-item"><span class="event-date">Momen 02</span><span class="event-desc">Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.</span></div>
+              <div class="event-item"><span class="event-date">Momen 03</span><span class="event-desc">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla.</span></div>
+              <div class="event-item"><span class="event-date">Momen 04</span><span class="event-desc">Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="insight reveal">
+          <strong>Analisis Dinamika Harga</strong>: Metrik stabilitas dihitung menggunakan <em>Coefficient of Variation</em> (CV), sementara lonjakan mengukur perubahan persentase bulanan tertinggi untuk mengidentifikasi anomali pasar.
+        </div>
       </div>
     </div>
   </section>
@@ -411,4 +513,122 @@ if(sapiFig.data) {
 // Lakukan hal yang sama untuk ayamFig dan telurFig
 
 </script>
+
+<script>
+// Simpan instance chart ke variabel agar bisa diakses fungsi filter
+let trendChart;
+const trendData = {{ trend_json|safe }};
+
+// Variabel status filter: 'protein' (default), 'sapi', atau 'all'
+let currentFilter = 'protein'; 
+
+function initTrendChart() {
+    const ctx = document.getElementById('c3a').getContext('2d');
+    trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendData.labels,
+            datasets: [
+                { 
+                    label: 'Sapi', 
+                    data: trendData.sapi, 
+                    borderColor: '#5A7A52', 
+                    backgroundColor: 'rgba(90,122,82,0.1)', 
+                    borderWidth: 2, 
+                    pointRadius: 0, 
+                    tension: 0.3, 
+                    fill: true,
+                    hidden: true // Default sembunyikan sapi sesuai permintaan poin 5
+                },
+                { 
+                    label: 'Ayam', 
+                    data: trendData.ayam, 
+                    borderColor: '#C9952A', 
+                    backgroundColor: 'rgba(201,149,42,0.1)', 
+                    borderWidth: 2, 
+                    pointRadius: 0, 
+                    tension: 0.3, 
+                    fill: true 
+                },
+                { 
+                    label: 'Telur', 
+                    data: trendData.telur, 
+                    borderColor: '#C4522A', 
+                    backgroundColor: 'rgba(196,82,42,0.1)', 
+                    borderWidth: 2, 
+                    pointRadius: 0, 
+                    tension: 0.3, 
+                    fill: true 
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false } }, // Kita gunakan legenda kustom di atas
+            scales: {
+                x: { ticks: { color: '#9A8060', font: { size: 9 }, maxTicksLimit: 10 }, grid: { display: false } },
+                y: { 
+                    ticks: { color: '#9A8060', font: { size: 9 }, callback: v => 'Rp ' + (v/1000) + 'rb' }, 
+                    grid: { color: 'rgba(92,61,30,0.05)' },
+                    beginAtZero: false // Skala natural sesuai permintaan poin 0
+                }
+            }
+        }
+    });
+    updateLegendUI(); // Sesuaikan tampilan legenda saat pertama kali dimuat
+}
+
+function filterChart(type) {
+    // Logika Toggle (Poin 4): Jika mengklik filter yang sedang aktif, kembali lihat semua
+    if (currentFilter === type) {
+        currentFilter = 'all';
+    } else {
+        currentFilter = type;
+    }
+
+    // Terapkan visibility dataset (Poin 2 & 3)
+    if (currentFilter === 'sapi') {
+        trendChart.setDatasetVisibility(0, true);  // Sapi ON
+        trendChart.setDatasetVisibility(1, false); // Ayam OFF
+        trendChart.setDatasetVisibility(2, false); // Telur OFF
+    } else if (currentFilter === 'protein') {
+        trendChart.setDatasetVisibility(0, false); // Sapi OFF
+        trendChart.setDatasetVisibility(1, true);  // Ayam ON
+        trendChart.setDatasetVisibility(2, true);  // Telur ON
+    } else {
+        // Tampilkan semua (all)
+        trendChart.setDatasetVisibility(0, true);
+        trendChart.setDatasetVisibility(1, true);
+        trendChart.setDatasetVisibility(2, true);
+    }
+    
+    trendChart.update();
+    updateLegendUI();
+}
+
+function updateLegendUI() {
+    const legSapi = document.getElementById('leg-sapi');
+    const legAyam = document.getElementById('leg-ayam');
+    const legTelur = document.getElementById('leg-telur');
+
+    // Reset semua class dimmed
+    legSapi.classList.remove('dimmed');
+    legAyam.classList.remove('dimmed');
+    legTelur.classList.remove('dimmed');
+
+    // Terapkan efek redup (Poin 2 & 3)
+    if (currentFilter === 'sapi') {
+        legAyam.classList.add('dimmed');
+        legTelur.classList.add('dimmed');
+    } else if (currentFilter === 'protein') {
+        legSapi.classList.add('dimmed');
+    }
+}
+
+// Inisialisasi chart saat dokumen siap
+document.addEventListener('DOMContentLoaded', initTrendChart);
+</script>
+
 {% endblock content %}
