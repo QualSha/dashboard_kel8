@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protein Maxxing</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="data.js"></script>
+<style>
+:root {
+  --cream:  #F7F2E8;
+  --cream2: #EDE5D4;
+  --cream3: #E0D5BF;
+  --brown:  #5C3D1E;
+  --brown2: #7A5230;
+  --brown3: #A3783F;
+  --rust:   #C4522A;
+  --rust2:  #E07040;
+  --sage:   #5A7A52;
+  --sage2:  #7FA872;
+  --sage3:  #C8DEC2;
+  --gold:   #C9952A;
+  --gold2:  #E8B84B;
+  --gold3:  #F5DFA0;
+  --text:   #2E1F0E;
+  --text2:  #5C4A30;
+  --text3:  #9A8060;
+  --white:  #FDFAF4;
+  --line:   rgba(92,61,30,0.10);
+  --line2:  rgba(92,61,30,0.18);
+  --sapi:   #5A7A52;
+  --ayam:   #C9952A;
+  --telur:  #C4522A;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);font-size:14px;line-height:1.7;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
+
+/* PROGRESS */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--rust);z-index:300;transition:width .1s;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:52px;background:rgba(247,242,232,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line2);}
+.nav-brand{font-family:'Playfair Display',serif;font-size:13px;color:var(--brown);letter-spacing:.01em;}
+.nav-brand span{color:var(--rust);font-style:italic;}
+.nav-links{display:flex;gap:3px;}
+.nav-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .2s;border:1.5px solid transparent;font-family:'DM Mono',monospace;background:transparent;}
+.nav-dot:hover{color:var(--brown);border-color:var(--line2);}
+.nav-dot.active{background:var(--rust);color:var(--white);border-color:var(--rust);}
+.nav-tag{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.04em;}
+
+/* SECTIONS — each is a full viewport */
+.section{position:relative;z-index:1;border-bottom:1px solid var(--line2);min-height:100vh;display:flex;align-items:center;}
+.section:last-child{border-bottom:none;}
+.section-inner{padding:64px 0 52px;width:100%;}
+.container{max-width:1100px;margin:0 auto;padding:0 48px;}
+
+/* EYEBROW */
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--rust);margin-bottom:12px;}
+.eyebrow::before{content:'';width:18px;height:1.5px;background:var(--rust);}
+
+/* TYPOGRAPHY */
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,36px);color:var(--brown);line-height:1.15;margin-bottom:8px;letter-spacing:-.01em;}
+.sec-title em{color:var(--rust);font-style:italic;}
+.sec-lead{font-size:13px;color:var(--text2);max-width:560px;line-height:1.8;margin-bottom:22px;font-weight:400;}
+
+/* BG VARIANTS */
+.sec-white{background:var(--white);}
+.sec-cream{background:var(--cream);}
+.sec-sage{background:#EEF5EC;}
+.sec-gold{background:#FBF5E4;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+.kpi-card{background:var(--white);border:1px solid var(--line2);border-radius:10px;padding:16px 18px 14px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(92,61,30,0.04);transition:box-shadow .2s,transform .2s;}
+.kpi-card:hover{box-shadow:0 6px 20px rgba(92,61,30,0.1);transform:translateY(-2px);}
+.kpi-card-accent{position:absolute;top:0;left:0;right:0;height:2.5px;}
+.kpi-tag{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:26px;color:var(--brown);line-height:1;margin-bottom:2px;}
+.kpi-unit{font-size:10px;color:var(--text3);margin-bottom:6px;}
+.kpi-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:20px;}
+.kpi-badge.up{background:rgba(196,82,42,0.1);color:var(--rust);}
+.kpi-badge.dn{background:rgba(90,122,82,0.12);color:var(--sage);}
+.kpi-divider{width:24px;height:1.5px;background:var(--line2);margin:6px 0;}
+.kpi-note{font-size:10.5px;color:var(--text3);line-height:1.5;}
+
+/* CHART */
+.chart-card{background:var(--white);border:1px solid var(--line2);border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px rgba(92,61,30,0.04);margin-bottom:14px;transition:box-shadow .2s;}
+.chart-card:hover{box-shadow:0 6px 18px rgba(92,61,30,0.09);}
+.chart-label{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+.chart-area{position:relative;width:100%;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* INSIGHT */
+.insight{background:var(--cream2);border-left:2.5px solid var(--rust);padding:10px 14px;border-radius:0 7px 7px 0;font-size:12px;color:var(--text2);line-height:1.7;margin-top:10px;}
+.insight strong{color:var(--brown);font-weight:600;}
+
+/* TABS */
+.tab-row{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+.tab-btn{font-size:11px;padding:5px 14px;border-radius:6px;cursor:pointer;border:1.5px solid var(--line2);background:transparent;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
+.tab-btn:hover{border-color:var(--brown3);color:var(--brown2);}
+.tab-btn.active{background:var(--brown);color:var(--white);border-color:var(--brown);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* EVENT LIST */
+.event-list{display:flex;flex-direction:column;gap:0;}
+.event-item{display:grid;grid-template-columns:80px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);}
+.event-item:last-child{border-bottom:none;}
+.event-date{font-family:'DM Mono',monospace;font-size:9.5px;color:var(--rust);font-weight:500;padding-top:2px;}
+.event-desc{font-size:11.5px;color:var(--text2);line-height:1.5;}
+
+/* NBAR */
+.nbar-wrap{display:flex;flex-direction:column;gap:7px;}
+.nbar-row{display:grid;grid-template-columns:72px 1fr 52px;align-items:center;gap:6px;}
+.nbar-label{font-size:11px;color:var(--text2);}
+.nbar-track{height:5px;background:var(--cream2);border-radius:3px;overflow:hidden;}
+.nbar-fill{height:5px;border-radius:3px;transition:width .4s ease;}
+.nbar-val{font-size:10.5px;color:var(--text2);font-family:'DM Mono',monospace;text-align:right;}
+.nut-card{background:var(--white);border:1px solid var(--line2);border-radius:9px;padding:14px;box-shadow:0 2px 6px rgba(92,61,30,0.04);transition:box-shadow .2s,transform .2s;}
+.nut-card:hover{box-shadow:0 6px 16px rgba(92,61,30,0.09);transform:translateY(-2px);}
+.nut-card-title{font-size:11.5px;font-weight:600;color:var(--brown);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.nut-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* SEASON */
+.season-pill{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--cream2);border-radius:6px;margin-bottom:4px;}
+.season-pill:last-child{margin-bottom:0;}
+.season-pill-val{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:500;}
+
+/* AFFORD */
+.afford-zone{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.04em;}
+.zone-red{background:rgba(196,82,42,0.12);color:var(--rust);}
+.zone-ok{background:rgba(90,122,82,0.12);color:var(--sage);}
+
+/* TAKEAWAY */
+.takeaway-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.takeaway-card{background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:18px 16px;transition:background .2s,transform .2s;}
+.takeaway-card:hover{background:rgba(255,255,255,0.14);transform:translateY(-2px);}
+.takeaway-num{font-family:'Playfair Display',serif;font-size:40px;color:rgba(255,255,255,0.13);line-height:1;margin-bottom:6px;}
+.takeaway-text{font-size:12.5px;color:rgba(253,250,244,0.82);line-height:1.65;}
+.takeaway-text strong{color:var(--white);font-weight:600;}
+.forecast-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,149,42,0.15);border:1px solid rgba(201,149,42,0.4);border-radius:20px;padding:3px 10px;font-size:9.5px;color:var(--gold2);font-family:'DM Mono',monospace;font-weight:500;letter-spacing:.05em;margin-bottom:12px;}
+
+/* SOURCES (final page only) */
+.source-section{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12);}
+.source-title{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(253,250,244,0.32);margin-bottom:8px;}
+.source-row{display:flex;flex-wrap:wrap;gap:5px;}
+.source-badge{font-size:9.5px;color:rgba(253,250,244,0.42);font-family:'DM Mono',monospace;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);padding:3px 9px;border-radius:20px;}
+
+/* SLIDER */
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:3px;background:var(--cream3);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--brown);cursor:pointer;}
+
+/* HERO */
+.hero{background:var(--brown);min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:var(--brown);}
+.hero-market-bg{position:absolute;inset:0;background:url('latar_pasar.jpg') center/cover no-repeat;opacity:0.13;z-index:1;}
+.hero-radial{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 30%,rgba(201,149,42,0.22) 0%,transparent 60%),radial-gradient(ellipse 50% 80% at 20% 80%,rgba(90,122,82,0.18) 0%,transparent 60%);z-index:2;}
+.hero-pattern{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(255,255,255,0.018) 60px,rgba(255,255,255,0.018) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(255,255,255,0.018) 60px,rgba(255,255,255,0.018) 61px);}
+.hero-deco{position:absolute;top:0;right:0;width:42%;height:100%;display:flex;align-items:center;justify-content:center;font-size:120px;opacity:.06;letter-spacing:16px;user-select:none;line-height:1.2;}
+.hero-content{position:relative;z-index:3;padding:100px 80px 80px;max-width:1400px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 460px;gap:56px;align-items:center;}
+.hero-left{}
+.hero-map-card{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;backdrop-filter:blur(6px);}
+.hero-map-label{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(253,250,244,0.45);margin-bottom:8px;}
+.hero-map-inner{height:280px;border-radius:8px;overflow:hidden;}
+.hero-map-inner .leaflet-container{background:transparent;}
+.hero-map-inner .leaflet-control-zoom{display:none;}
+.hero-map-inner .leaflet-control-attribution{font-size:7px;background:rgba(0,0,0,.25);color:rgba(255,255,255,.3);}
+.hero-map-inner .leaflet-tooltip{background:var(--brown);color:var(--white);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:10px;padding:5px 8px;}
+.hero-map-inner .leaflet-tooltip:before{display:none;}
+.hero-choro-legend{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.hero-choro-label{font-family:'DM Mono',monospace;font-size:8px;color:rgba(253,250,244,0.4);}
+.hero-choro-gradient{height:4px;flex:1;border-radius:2px;}
+.hero-label{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:28px;display:flex;align-items:center;gap:10px;opacity:.85;}
+.hero-label::after{content:'';flex:1;max-width:60px;height:1px;background:var(--gold2);opacity:.5;}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(64px,9vw,120px);line-height:1.0;color:var(--white);margin-bottom:20px;letter-spacing:-.02em;}
+.hero-title .accent{color:var(--gold2);font-style:italic;}
+.hero-title .accent2{color:var(--rust2);}
+.hero-sub{font-size:18px;color:rgba(253,250,244,0.65);max-width:680px;line-height:1.85;margin-bottom:52px;font-weight:300;}
+.hero-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;max-width:860px;}
+.hero-kpi{background:rgba(255,255,255,0.04);padding:26px 28px;backdrop-filter:blur(4px);}
+.hero-kpi-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:rgba(253,250,244,0.38);margin-bottom:8px;text-transform:uppercase;}
+.hero-kpi-val{font-family:'Playfair Display',serif;font-size:36px;color:var(--white);line-height:1;}
+.hero-kpi-sub{font-size:12px;color:rgba(253,250,244,0.38);margin-top:5px;}
+.hero-kpi-badge{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-family:'DM Mono',monospace;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:10px;}
+.badge-up{background:rgba(196,82,42,0.28);color:#f0907a;}
+.badge-dn{background:rgba(90,122,82,0.28);color:#a0d090;}
+
+/* SCROLL CTA */
+.scroll-cta{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;z-index:3;}
+.scroll-cta span{font-size:8.5px;font-family:'DM Mono',monospace;color:rgba(253,250,244,0.28);letter-spacing:.08em;text-transform:uppercase;}
+.scroll-arrow{width:18px;height:18px;border-right:1.5px solid rgba(253,250,244,0.2);border-bottom:1.5px solid rgba(253,250,244,0.2);transform:rotate(45deg);animation:bob 1.6s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:rotate(45deg) translateY(0);}50%{transform:rotate(45deg) translateY(4px);}}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* STORY CALLOUT */
+.story-callout{border-left:2.5px solid var(--gold);background:var(--gold3);padding:12px 16px;border-radius:0 7px 7px 0;margin-bottom:16px;font-size:12.5px;color:var(--text2);line-height:1.75;}
+.story-callout strong{color:var(--brown);}
+
+/* ANNOTATION CHIP */
+.annot{display:inline-block;background:rgba(196,82,42,0.12);border:1px solid rgba(196,82,42,0.25);border-radius:4px;padding:1px 6px;font-family:'DM Mono',monospace;font-size:9.5px;color:var(--rust);font-weight:500;}
+
+/* MAP */
+.map-wrap{position:relative;width:100%;height:255px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.04);}
+.map-leaflet{width:100%;height:255px;background:transparent;}
+.map-leaflet .leaflet-control-attribution{font-size:8px;background:rgba(253,250,244,.15);color:rgba(253,250,244,.5);}
+.map-leaflet .leaflet-control-zoom a{color:var(--brown);border-color:var(--line2);}
+.map-leaflet .leaflet-tooltip{background:var(--brown);color:var(--white);border:none;border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.18);font-family:'DM Sans',sans-serif;font-size:11px;padding:7px 10px;}
+.map-leaflet .leaflet-tooltip:before{display:none;}
+.map-svg{width:100%;height:auto;display:block;}
+.map-tooltip{position:fixed;pointer-events:none;background:var(--brown);color:var(--white);border-radius:7px;padding:7px 11px;font-size:11px;font-family:'DM Sans',sans-serif;z-index:9999;opacity:0;transition:opacity .12s;max-width:180px;box-shadow:0 4px 16px rgba(0,0,0,0.18);}
+.map-tooltip .tt-prov{font-weight:600;margin-bottom:2px;}
+.map-tooltip .tt-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold2);}
+.choro-legend{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.choro-legend-label{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--text3);}
+.choro-gradient{height:6px;width:120px;border-radius:3px;}
+
+/* TEAM */
+.team-grid{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:20px;}
+.team-member{text-align:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:20px 16px;border-radius:12px;width:140px;transition:all .2s;}
+.team-member:hover{background:rgba(255,255,255,0.11);transform:translateY(-4px);}
+.team-member img{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15);margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;}
+.team-member p{margin:0;font-weight:600;color:var(--white);font-size:11.5px;}
+.team-member span{font-size:9.5px;color:rgba(253,250,244,0.45);font-family:'DM Mono',monospace;}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:18px;}
+.donut-labels{display:flex;flex-direction:column;gap:8px;}
+.donut-label-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2);}
+.donut-label-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* LOLLIPOP */
+.lollipop-wrap{display:flex;flex-direction:column;gap:6px;}
+.lollipop-row{display:flex;align-items:center;gap:8px;}
+.lollipop-label{font-size:10.5px;color:var(--text2);width:72px;flex-shrink:0;text-align:right;}
+.lollipop-track{flex:1;position:relative;height:14px;display:flex;align-items:center;}
+.lollipop-line{height:1.5px;background:var(--cream3);border-radius:1px;position:absolute;left:0;right:0;}
+.lollipop-fill{height:1.5px;border-radius:1px;position:absolute;left:0;}
+.lollipop-circle{width:10px;height:10px;border-radius:50%;position:absolute;top:50%;transform:translate(-50%,-50%);transition:transform .2s;}
+.lollipop-row:hover .lollipop-circle{transform:translate(-50%,-50%) scale(1.4);}
+.lollipop-val{font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);width:52px;flex-shrink:0;}
+
+/* WAFFLE */
+.waffle-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;width:100%;}
+.waffle-cell{aspect-ratio:1;border-radius:2px;transition:opacity .15s;}
+.waffle-cell:hover{opacity:.7;}
+
+/* HEATMAP */
+.hm-wrap{overflow-x:auto;width:100%;}
+.hm-table{border-collapse:separate;border-spacing:3px;width:100%;}
+.hm-th{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-align:center;padding:3px 4px;font-weight:500;}
+.hm-td-label{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;padding-right:10px;white-space:nowrap;font-weight:600;width:60px;}
+.hm-cell{height:52px;min-width:60px;border-radius:6px;transition:opacity .15s,transform .15s;cursor:default;}
+.hm-cell:hover{opacity:.75;transform:scale(1.06);}
+/* TRANSITION BANNER */
+.transition-banner{background:var(--brown);color:var(--white);padding:24px 28px;border-radius:10px;margin:16px 0;position:relative;overflow:hidden;}
+.transition-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 50%,rgba(201,149,42,0.18) 0%,transparent 70%);}
+.transition-banner-inner{position:relative;z-index:1;}
+.transition-banner h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold2);margin-bottom:6px;font-style:italic;}
+.transition-banner p{font-size:12px;color:rgba(253,250,244,0.72);line-height:1.7;}
+.transition-egg{font-size:32px;position:absolute;right:28px;top:50%;transform:translateY(-50%);opacity:.6;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero-content{grid-template-columns:1fr;gap:24px;}
+}
+@media(max-width:760px){
+  .kpi-row,.grid2,.grid3,.takeaway-grid,.hero-kpi-row{grid-template-columns:1fr;}
+  nav{padding:0 16px;}
+  .container{padding:0 16px;}
+  .hero-content{padding:48px 16px 40px;}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav>
+  <span class="nav-brand">Protein <span>Maxxing</span></span>
+  <div class="nav-links" id="navDots"></div>
+  <span class="nav-tag">Kelompok 8</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="s1" data-label="Pembuka">
+  <div class="hero-bg"></div>
+  <div class="hero-market-bg"></div>
+  <div class="hero-radial"></div>
+  <div class="hero-pattern"></div>
+  <div class="hero-deco">🐄🍗🥚</div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-label">Data Story Pangan Indonesia</div>
+      <h1 class="hero-title"><span class="accent">Protein</span><br><span class="accent2">Maxxing</span></h1>
+      <p class="hero-sub">Daging sapi, daging ayam, telur ayam: tiga komoditas yang menopang kebutuhan protein jutaan rumah tangga Indonesia. Ketika harganya naik, siapa yang paling merasakan?</p>
+      <div class="hero-kpi-row">
+        <div class="hero-kpi">
+          <div class="hero-kpi-label">Daging Sapi</div>
+          <div class="hero-kpi-val" id="kpi-sapi-val">–</div>
+          <div class="hero-kpi-sub">Rp/kg · nasional Apr 2026</div>
+          <div class="hero-kpi-badge badge-up" id="kpi-sapi-yoy">–</div>
+        </div>
+        <div class="hero-kpi">
+          <div class="hero-kpi-label">Daging Ayam</div>
+          <div class="hero-kpi-val" id="kpi-ayam-val">–</div>
+          <div class="hero-kpi-sub">Rp/kg · nasional Apr 2026</div>
+          <div class="hero-kpi-badge badge-up" id="kpi-ayam-yoy">–</div>
+        </div>
+        <div class="hero-kpi">
+          <div class="hero-kpi-label">Telur Ayam</div>
+          <div class="hero-kpi-val" id="kpi-telur-val">–</div>
+          <div class="hero-kpi-sub">Rp/kg · nasional Apr 2026</div>
+          <div class="hero-kpi-badge badge-up" id="kpi-telur-yoy">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-cta" onclick="document.getElementById('s2').scrollIntoView({behavior:'smooth'})">
+    <span>mulai membaca</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- SCENE 1: LANSKAP + CHOROPLETH -->
+<section class="section sec-white" id="s2" data-label="Lanskap">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Lanskap Nasional</div>
+      <h2 class="sec-title">Di mana paling <em>mahal?</em></h2>
+      <p class="sec-lead">Harga protein tidak seragam di seluruh Indonesia. Selisih antara provinsi termurah dan termahal bisa melampaui 40% untuk komoditas yang sama.</p>
+    </div>
+
+    <div class="kpi-row reveal" style="margin-bottom:16px;">
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--sapi);"></div>
+        <div class="kpi-tag">Termahal — Daging Sapi</div>
+        <div class="kpi-val">Kalsel</div>
+        <div class="kpi-unit">rata-rata Rp 163.304/kg</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--ayam);"></div>
+        <div class="kpi-tag">Termahal — Daging Ayam</div>
+        <div class="kpi-val">Papua Barat</div>
+        <div class="kpi-unit">rata-rata Rp 48.641/kg</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--telur);"></div>
+        <div class="kpi-tag">Termahal — Telur Ayam</div>
+        <div class="kpi-val">Papua</div>
+        <div class="kpi-unit">rata-rata Rp 38.924/kg</div>
+      </div>
+    </div>
+
+    <div class="tab-row reveal">
+      <button class="tab-btn active" onclick="switchTab('land','sapi',this)">Daging Sapi</button>
+      <button class="tab-btn" onclick="switchTab('land','ayam',this)">Daging Ayam</button>
+      <button class="tab-btn" onclick="switchTab('land','telur',this)">Telur Ayam</button>
+    </div>
+
+    <div id="land-sapi" class="tab-panel active reveal">
+      <div class="grid2">
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">Sebaran harga daging sapi antar provinsi (Rp/kg, Jan 2024–Apr 2026)</div>
+          <div class="map-wrap" id="map-sapi-wrap" style="height:255px;"></div>
+          <div class="choro-legend" style="margin-top:8px;">
+            <span class="choro-legend-label">Murah</span>
+            <div class="choro-gradient" style="background:linear-gradient(90deg,rgba(90,122,82,0.18),rgba(90,122,82,1));"></div>
+            <span class="choro-legend-label">Mahal</span>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">10 provinsi dengan harga tertinggi (Rp/kg)</div>
+          <div class="chart-area" style="height:200px;"><canvas id="c2a"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="land-ayam" class="tab-panel">
+      <div class="grid2">
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">Sebaran harga daging ayam antar provinsi (Rp/kg, Jan 2024–Apr 2026)</div>
+          <div class="map-wrap" id="map-ayam-wrap" style="height:255px;"></div>
+          <div class="choro-legend" style="margin-top:8px;">
+            <span class="choro-legend-label">Murah</span>
+            <div class="choro-gradient" style="background:linear-gradient(90deg,rgba(201,149,42,0.18),rgba(201,149,42,1));"></div>
+            <span class="choro-legend-label">Mahal</span>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">10 provinsi dengan harga tertinggi (Rp/kg)</div>
+          <div class="chart-area" style="height:200px;"><canvas id="c2b"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="land-telur" class="tab-panel">
+      <div class="grid2">
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">Sebaran harga telur ayam antar provinsi (Rp/kg, Jan 2024–Apr 2026)</div>
+          <div class="map-wrap" id="map-telur-wrap" style="height:255px;"></div>
+          <div class="choro-legend" style="margin-top:8px;">
+            <span class="choro-legend-label">Murah</span>
+            <div class="choro-gradient" style="background:linear-gradient(90deg,rgba(196,82,42,0.18),rgba(196,82,42,1));"></div>
+            <span class="choro-legend-label">Mahal</span>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">10 provinsi dengan harga tertinggi (Rp/kg)</div>
+          <div class="chart-area" style="height:200px;"><canvas id="c2c"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-callout reveal">
+      Kalimantan mendominasi harga sapi tertinggi, sementara kawasan timur (Papua, Maluku) konsisten mahal di semua komoditas. Pola ini mencerminkan rantai distribusi yang panjang dan tidak efisien.
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SCENE 2: TREN -->
+<section class="section sec-cream" id="s3" data-label="Tren">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Tren Waktu</div>
+      <h2 class="sec-title">Naik terus, atau ada <em>polanya?</em></h2>
+      <p class="sec-lead">Dari data 28 bulan, lonjakan harga bukan sekadar tren: ada ritme yang bisa dibaca. Ramadan, pergantian musim, dan kebijakan impor meninggalkan jejak yang konsisten.</p>
+    </div>
+    <div class="kpi-row reveal">
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--ayam);"></div>
+        <div class="kpi-tag">Lonjakan paling tajam</div>
+        <div class="kpi-val">+17,4%</div>
+        <div class="kpi-unit">Daging ayam, Jan → Apr 2024 (Ramadan spike)</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note">Dari Rp 38.193 ke Rp 44.793/kg dalam 3 bulan</div>
+        <div class="kpi-badge up" style="margin-top:5px;">↑ Ramadan spike</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--sapi);"></div>
+        <div class="kpi-tag">Kenaikan kumulatif tertinggi</div>
+        <div class="kpi-val">+6,5%</div>
+        <div class="kpi-unit">Daging sapi, Jan 2024 vs Apr 2026</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note">Dari Rp 136.235 → Rp 145.115/kg, tanpa koreksi</div>
+        <div class="kpi-badge up" style="margin-top:5px;">↑ Tren struktural naik</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--telur);"></div>
+        <div class="kpi-tag">Paling stabil</div>
+        <div class="kpi-val">Telur</div>
+        <div class="kpi-unit">Koef. variasi terendah secara nasional</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note">CV ~4,1% — separuh volatilitas ayam (8,7%)</div>
+        <div class="kpi-badge dn" style="margin-top:5px;">✓ Volatilitas terkelola</div>
+      </div>
+    </div>
+
+    <div class="grid2 reveal">
+      <div class="chart-card" style="margin-bottom:0;">
+        <div class="chart-label">Harga rata-rata nasional — Jan 2024 s.d. Apr 2026 (Rp/kg)</div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:var(--sapi)"></span>Daging sapi</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--ayam)"></span>Daging ayam</span>
+          <span class="legend-item"><span class="legend-dot" style="background:var(--telur)"></span>Telur ayam</span>
+        </div>
+        <div class="chart-area" style="height:220px;"><canvas id="c3a"></canvas></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:0;">
+        <div class="chart-label">Momen kunci yang membentuk harga</div>
+        <div class="event-list">
+          <div class="event-item"><span class="event-date">Mar–Apr 2024</span><span class="event-desc">Ramadan dan Idul Fitri: harga ayam melonjak 17% dari Februari</span></div>
+          <div class="event-item"><span class="event-date">Jun–Agu 2024</span><span class="event-desc">Koreksi pasca-Lebaran: harga ayam turun sekitar 9% dalam 12 minggu</span></div>
+          <div class="event-item"><span class="event-date">Jan 2025</span><span class="event-desc">Awal tahun: lonjakan permintaan telur dan ayam memasuki musim hajatan</span></div>
+          <div class="event-item"><span class="event-date">Mar–Apr 2025</span><span class="event-desc">Ramadan 2025: pola berulang, sapi ikut naik ke Rp 140.000+</span></div>
+          <div class="event-item"><span class="event-date">Des 2025</span><span class="event-desc">Natal dan Tahun Baru: harga ayam dan telur melonjak serentak</span></div>
+          <div class="event-item"><span class="event-date">Jan–Apr 2026</span><span class="event-desc">Tren naik berkelanjutan: sapi menyentuh Rp 145.000, tertinggi dalam dataset</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="insight reveal">
+      <strong>Sapi bergerak paling lambat</strong>: naik sekitar Rp 9.000/kg selama 28 bulan. Ayam lebih responsif terhadap event musiman, naik-turun dalam hitungan minggu. Telur bergerak di antara keduanya, dengan dua puncak per tahun yang konsisten.
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SCENE 3: MUSIMAN -->
+<section class="section sec-sage" id="s4" data-label="Musiman">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Pola Musiman</div>
+      <h2 class="sec-title">Bulan paling mahal<br><em>bisa diprediksi</em></h2>
+      <p class="sec-lead">Pola musiman dirangkum dari rata-rata harga tiap bulan kalender, gabungan 2024–2026. Ini cermin dari perilaku pasar yang berulang setiap tahun.</p>
+    </div>
+
+    <div class="chart-card reveal" style="margin-bottom:0;width:100%;">
+      <div class="chart-label">Heatmap intensitas harga per bulan kalender</div>
+      <div id="heatmap-wrap" style="margin-top:10px;width:100%;"></div>
+    </div>
+
+    <div class="grid3 reveal" style="margin-top:12px;">
+      <div style="background:var(--white);border:1px solid var(--line2);border-radius:9px;padding:14px;">
+        <div style="font-size:9px;font-weight:600;color:var(--sage);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:8px;">DAGING SAPI</div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Puncak harga</span><span class="season-pill-val" style="color:var(--rust);">April</span></div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Termurah</span><span class="season-pill-val" style="color:var(--sage);">Juli</span></div>
+        <div class="season-pill" style="margin-bottom:0;"><span style="font-size:10px;color:var(--text3);">Amplitudo</span><span class="season-pill-val" style="color:var(--brown);">+3,3%</span></div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--line2);border-radius:9px;padding:14px;">
+        <div style="font-size:9px;font-weight:600;color:var(--ayam);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:8px;">DAGING AYAM</div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Puncak harga</span><span class="season-pill-val" style="color:var(--rust);">Jan dan Apr</span></div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Termurah</span><span class="season-pill-val" style="color:var(--sage);">Agustus</span></div>
+        <div class="season-pill" style="margin-bottom:0;"><span style="font-size:10px;color:var(--text3);">Amplitudo</span><span class="season-pill-val" style="color:var(--rust);">+12,6%</span></div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--line2);border-radius:9px;padding:14px;">
+        <div style="font-size:9px;font-weight:600;color:var(--telur);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:8px;">TELUR AYAM</div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Puncak harga</span><span class="season-pill-val" style="color:var(--rust);">Apr dan Des</span></div>
+        <div class="season-pill"><span style="font-size:10px;color:var(--text3);">Termurah</span><span class="season-pill-val" style="color:var(--sage);">September</span></div>
+        <div class="season-pill" style="margin-bottom:0;"><span style="font-size:10px;color:var(--text3);">Amplitudo</span><span class="season-pill-val" style="color:var(--brown);">+6,8%</span></div>
+      </div>
+    </div>
+
+    <div class="insight reveal" style="margin-top:12px;">
+      <strong>Amplitudo musiman ayam (12,6%) hampir 4x lebih besar dari sapi (3,3%)</strong>: konsekuensi dari rantai pasok yang lebih pendek dan langsung terpengaruh permintaan. Ramadan dan Lebaran adalah penentu tunggal terbesar pergerakan harga ayam.
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SCENE 4: KETIMPANGAN -->
+<section class="section sec-white" id="s5" data-label="Ketimpangan">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Ketimpangan Wilayah</div>
+      <h2 class="sec-title">UMP rendah, harga tinggi:<br><em>double burden</em></h2>
+      <p class="sec-lead">Provinsi dengan upah minimum rendah justru cenderung membayar harga pangan yang lebih tinggi. Bukan karena permintaannya besar, melainkan karena rantai distribusi ke sana lebih panjang dan mahal.</p>
+    </div>
+
+    <div class="grid2 reveal">
+      <div class="chart-card" style="margin-bottom:0;">
+        <div class="chart-label">Harga sapi vs UMP provinsi — Apr 2026 (setiap titik = 1 provinsi)</div>
+        <div class="chart-area" style="height:280px;"><canvas id="c4a"></canvas></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:0;">
+        <div class="chart-label">Gap harga maks - min antar provinsi per komoditas (Rp/kg)</div>
+        <div id="gap-lollipop" style="padding:24px 0;"></div>
+      </div>
+    </div>
+
+    <div class="story-callout reveal" style="margin-top:12px;">
+      Titik-titik di kanan bawah scatter plot menandakan provinsi dengan UMP tinggi dan harga sapi tidak ikut tinggi, seperti DKI Jakarta dan Kepulauan Riau. Sebaliknya, beberapa provinsi Jawa dengan UMP terendah membayar harga sapi di kisaran Rp 139.000–155.000.
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SCENE 5: NUTRISI -->
+<section class="section sec-gold" id="s6" data-label="Nutrisi">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Nilai Gizi per Rupiah</div>
+      <h2 class="sec-title">Bukan soal harga,<br>soal <em>nilai gizinya</em></h2>
+      <p class="sec-lead">Ketika harga naik, yang berubah bukan hanya pengeluaran: efisiensi nutrisi per rupiah juga berubah. Komoditas termurah belum tentu yang paling efisien untuk memenuhi kebutuhan protein harian.</p>
+    </div>
+
+    <div id="nut-100g" class="tab-panel active reveal">
+      <div class="grid3">
+        <div class="nut-card">
+          <div class="nut-card-title"><span class="nut-dot" style="background:var(--sapi);"></span>Daging Sapi</div>
+          <div class="nbar-wrap">
+            <div class="nbar-row"><span class="nbar-label">Protein</span><div class="nbar-track"><div class="nbar-fill" style="width:69%;background:var(--sapi);"></div></div><span class="nbar-val">18,8 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Lemak</span><div class="nbar-track"><div class="nbar-fill" style="width:56%;background:var(--sage2);"></div></div><span class="nbar-val">14,0 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Kalori</span><div class="nbar-track"><div class="nbar-fill" style="width:66%;background:var(--cream3);"></div></div><span class="nbar-val">201 kal</span></div>
+            <div class="nbar-row"><span class="nbar-label">Karbohidrat</span><div class="nbar-track"><div class="nbar-fill" style="width:0%;background:var(--sapi);"></div></div><span class="nbar-val">0 g</span></div>
+          </div>
+        </div>
+        <div class="nut-card">
+          <div class="nut-card-title"><span class="nut-dot" style="background:var(--ayam);"></span>Daging Ayam</div>
+          <div class="nbar-wrap">
+            <div class="nbar-row"><span class="nbar-label">Protein</span><div class="nbar-track"><div class="nbar-fill" style="width:67%;background:var(--ayam);"></div></div><span class="nbar-val">18,2 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Lemak</span><div class="nbar-track"><div class="nbar-fill" style="width:100%;background:var(--gold2);"></div></div><span class="nbar-val">25,0 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Kalori</span><div class="nbar-track"><div class="nbar-fill" style="width:98%;background:var(--cream3);"></div></div><span class="nbar-val">298 kal</span></div>
+            <div class="nbar-row"><span class="nbar-label">Karbohidrat</span><div class="nbar-track"><div class="nbar-fill" style="width:0%;background:var(--ayam);"></div></div><span class="nbar-val">0 g</span></div>
+          </div>
+        </div>
+        <div class="nut-card">
+          <div class="nut-card-title"><span class="nut-dot" style="background:var(--telur);"></span>Telur Ayam</div>
+          <div class="nbar-wrap">
+            <div class="nbar-row"><span class="nbar-label">Protein</span><div class="nbar-track"><div class="nbar-fill" style="width:46%;background:var(--telur);"></div></div><span class="nbar-val">12,4 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Lemak</span><div class="nbar-track"><div class="nbar-fill" style="width:43%;background:var(--rust2);"></div></div><span class="nbar-val">10,8 g</span></div>
+            <div class="nbar-row"><span class="nbar-label">Kalori</span><div class="nbar-track"><div class="nbar-fill" style="width:52%;background:var(--cream3);"></div></div><span class="nbar-val">154 kal</span></div>
+            <div class="nbar-row"><span class="nbar-label">Karbohidrat</span><div class="nbar-track"><div class="nbar-fill" style="width:2.5%;background:var(--telur);"></div></div><span class="nbar-val">0,7 g</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="insight" style="margin-top:10px;">Secara absolut, ayam dan sapi hampir setara dalam kandungan protein per 100g: keduanya sekitar 18–19g. Telur lebih rendah per 100g, tapi kisah sesungguhnya baru terlihat saat dilihat per rupiah.</div>
+      <!-- Simulasi Harga always visible below -->
+      <div class="chart-card" style="margin-top:20px;">
+        <div class="chart-label" style="margin-bottom:14px;">Simulasi Harga — Atur Anggaran Belanja</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px;">
+          <div style="flex:1;">
+            <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;">Anggaran Belanja (Rp)</div>
+            <input type="range" min="5000" max="200000" step="1000" value="50000" id="budget-slider">
+            <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px;"><span>Rp 5.000</span><span>Rp 200.000</span></div>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--brown);white-space:nowrap;min-width:140px;text-align:right;" id="budget-label">Rp 50.000</div>
+        </div>
+        <!-- Waffle charts by commodity -->
+        <div id="sim-waffle-wrap" style="margin-top:16px;"></div>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10px;color:var(--text3);">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--sapi);"></span>Protein</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--gold2);"></span>Lemak</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--rust2);"></span>Karbohidrat</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--cream3);opacity:0.5;border:1px solid var(--line2);"></span>Sisa grid</span>
+          <span style="font-family:'DM Mono',monospace;margin-left:auto;font-size:9.5px;">1 grid = nilai gizi (gram) yang sama di setiap komoditas</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="nut-rp" class="tab-panel" style="display:none;"></div>
+    <div id="nut-sim" class="tab-panel" style="display:none;"></div>
+    <div class="transition-banner reveal" style="margin-top:20px;">
+      <div class="transition-egg">🥚</div>
+      <div class="transition-banner-inner">
+        <h3>Telur: Juara Protein per Rupiah</h3>
+        <p>Dari analisis di atas, telur terbukti adalah sumber protein paling efisien: <strong style="color:var(--gold2);">3,73g protein per Rp 1.000</strong>, hampir 3x lebih efisien dari sapi (1,30g). Tapi ketika kita bandingkan dengan UMR — gambaran yang muncul jauh lebih kompleks. Apakah telur benar-benar "terjangkau" bagi semua orang?</strong></p>
+      </div>
+    </div>
+  </div>
+  </div>
+  
+  
+</section>
+
+<!-- SCENE 6: DAYA BELI -->
+<section class="section sec-white" id="s7" data-label="Daya Beli">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow">Daya Beli</div>
+      <h2 class="sec-title">Berapa persen gaji<br>untuk <em>protein?</em></h2>
+      <p class="sec-lead">Affordability Index: berapa persen UMP yang dibutuhkan untuk memenuhi 60g protein per hari selama sebulan, setara kebutuhan protein dewasa aktif. Data menggunakan UMP 2025 dan harga Apr 2026.</p>
+    </div>
+
+    <div class="kpi-row reveal">
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--sapi);"></div>
+        <div class="kpi-tag">Daging Sapi — Beban Protein</div>
+        <div class="kpi-val" style="font-size:22px;">Rp 20.769<span style="font-size:11px;color:var(--text3);font-family:'DM Sans',sans-serif;">/hari</span></div>
+        <div class="kpi-unit">untuk 60g protein · nasional Apr 2026</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note"><strong>Rp 623.077/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--rust);font-weight:600;">44,3% UMP nasional</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--ayam);"></div>
+        <div class="kpi-tag">Daging Ayam — Beban Protein</div>
+        <div class="kpi-val" style="font-size:22px;">Rp 13.956<span style="font-size:11px;color:var(--text3);font-family:'DM Sans',sans-serif;">/hari</span></div>
+        <div class="kpi-unit">untuk 60g protein · nasional Apr 2026</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note"><strong>Rp 418.681/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--brown3);font-weight:600;">29,8% UMP nasional</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-accent" style="background:var(--telur);"></div>
+        <div class="kpi-tag">Telur Ayam — Beban Protein</div>
+        <div class="kpi-val" style="font-size:22px;">Rp 16.048<span style="font-size:11px;color:var(--text3);font-family:'DM Sans',sans-serif;">/hari</span></div>
+        <div class="kpi-unit">untuk 60g protein · nasional Apr 2026</div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-note"><strong>Rp 481.452/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--sage);font-weight:600;">34,3% UMP nasional</span></div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="chart-card" style="margin-bottom:0;width:100%;">
+        <div class="chart-label">10 provinsi dengan beban protein telur tertinggi (% UMP 2025, harga Apr 2026)</div>
+        <div class="chart-area" style="height:320px;"><canvas id="c7a"></canvas></div>
+      </div>
+    </div>
+
+    <div class="story-callout reveal" style="margin-top:12px;">
+      Ironi yang terlihat dari data: NTT, salah satu provinsi dengan UMP terendah, justru membayar telur paling mahal sebagai proporsi penghasilan. Sementara DKI Jakarta, dengan UMP tertinggi, hanya mengalokasikan 8,4% UMP untuk kebutuhan protein yang sama.
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SCENE 7: PENUTUP -->
+<section class="section" id="s8" data-label="Kesimpulan" style="background:var(--brown);">
+  <div class="section-inner">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow" style="color:var(--gold2);">Temuan dan Implikasi</div>
+      <h2 class="sec-title" style="color:var(--white);">Tiga hal yang<br><em style="color:var(--gold2);">perlu diketahui</em></h2>
+      <p class="sec-lead" style="color:rgba(253,250,244,0.72);">Data Jan 2024–Apr 2026 membentuk gambaran yang konsisten: ada ketimpangan struktural, ada pola yang dapat diprediksi, dan ada paradoks daya beli yang sering luput dari perhatian.</p>
+    </div>
+
+    <div class="takeaway-grid reveal">
+      <div class="takeaway-card">
+        <div class="takeaway-num">01</div>
+        <div class="takeaway-text"><strong>Telur adalah protein paling efisien per rupiah</strong>, menghasilkan 2,5x lebih banyak protein per Rp 1.000 dibanding sapi. Tapi di NTT, bebannya terhadap UMP tetap melampaui 21%.</div>
+      </div>
+      <div class="takeaway-card">
+        <div class="takeaway-num">02</div>
+        <div class="takeaway-text"><strong>Harga ayam adalah yang paling fluktuatif</strong>: amplitudo musiman 12,6% vs sapi 3,3%. Keluarga yang bergantung pada ayam menanggung ketidakpastian pengeluaran terbesar.</div>
+      </div>
+      <div class="takeaway-card">
+        <div class="takeaway-num">03</div>
+        <div class="takeaway-text"><strong>Gap wilayah tidak ada tanda mereda</strong>: Kalimantan Selatan membayar sapi rata-rata 41% lebih mahal dari NTT, dan pola ini konsisten sepanjang 28 bulan data.</div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-bottom:20px;">
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.18);border-radius:16px;padding:32px 36px;position:relative;overflow:hidden;max-width:100%;">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 5% 40%,rgba(201,149,42,0.14) 0%,transparent 60%),radial-gradient(ellipse 50% 80% at 95% 70%,rgba(90,122,82,0.1) 0%,transparent 60%);pointer-events:none;"></div>
+        <div style="position:relative;z-index:1;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;">
+            <span style="font-size:16px;">✦</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);font-weight:500;">Rangkuman Insight Kunci</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.1);"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:16px;">
+              <span style="font-size:26px;line-height:1;flex-shrink:0;">🥚</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:5px;font-family:'Playfair Display',serif;">Telur: efisien, tapi tidak merata</div>
+                <div style="font-size:11.5px;color:rgba(253,250,244,0.65);line-height:1.7;">Hanya Rp 16.048/hari untuk 60g protein — paling murah dari ketiganya. Namun di NTT, angka ini menyedot <strong style="color:var(--gold2);">21,3% UMP</strong>, lebih dari 2,5× lipat beban warga Jakarta.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:16px;">
+              <span style="font-size:26px;line-height:1;flex-shrink:0;">📅</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:5px;font-family:'Playfair Display',serif;">Ramadan: sinyal harga paling kuat</div>
+                <div style="font-size:11.5px;color:rgba(253,250,244,0.65);line-height:1.7;">Setiap tahun harga ayam melonjak <strong style="color:var(--gold2);">12–17%</strong> selama Ramadan. Pola ini berulang konsisten dan bisa diantisipasi rumah tangga sejak jauh hari.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:16px;">
+              <span style="font-size:26px;line-height:1;flex-shrink:0;">🗺️</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:5px;font-family:'Playfair Display',serif;">Indonesia Timur: beban ganda</div>
+                <div style="font-size:11.5px;color:rgba(253,250,244,0.65);line-height:1.7;">Papua, Maluku, dan NTT menanggung dua beban sekaligus: UMP terendah di Indonesia, sekaligus harga pangan <strong style="color:var(--gold2);">tertinggi nasional</strong>. Distribusi tidak efisien memperparah ketimpangan gizi.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:16px;">
+              <span style="font-size:26px;line-height:1;flex-shrink:0;">📈</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:5px;font-family:'Playfair Display',serif;">Sapi: tren naik tanpa koreksi</div>
+                <div style="font-size:11.5px;color:rgba(253,250,244,0.65);line-height:1.7;">Dalam 28 bulan, harga sapi naik <strong style="color:var(--gold2);">Rp 9.000/kg</strong> tanpa pernah kembali ke titik awal. Biaya protein sapi (44,3% UMP) menjadikannya pilihan yang semakin tidak realistis bagi mayoritas pekerja.</div>
+              </div>
+            </div>
+          </div>
+          <!-- Summary stat strip -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;margin-top:20px;">
+            <div style="background:rgba(255,255,255,0.04);padding:14px 16px;text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold2);">3×</div>
+              <div style="font-size:9.5px;color:rgba(253,250,244,0.5);font-family:'DM Mono',monospace;margin-top:3px;">protein lebih banyak dari telur vs sapi per Rp 1.000</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:14px 16px;text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--rust2);">41%</div>
+              <div style="font-size:9.5px;color:rgba(253,250,244,0.5);font-family:'DM Mono',monospace;margin-top:3px;">gap harga sapi antara Kalsel (termahal) dan NTT (termurah)</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:14px 16px;text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--sage2);">12,6%</div>
+              <div style="font-size:9.5px;color:rgba(253,250,244,0.5);font-family:'DM Mono',monospace;margin-top:3px;">amplitudo musiman ayam — 4× lebih besar dari sapi</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);padding:14px 16px;text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold2);">21,3%</div>
+              <div style="font-size:9.5px;color:rgba(253,250,244,0.5);font-family:'DM Mono',monospace;margin-top:3px;">UMP yang habis untuk protein telur di NTT — tertinggi nasional</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="forecast-badge reveal">
+      <span style="width:5px;height:5px;border-radius:50%;background:var(--gold2);display:inline-block;"></span>
+      PROYEKSI APR–DES 2026
+    </div>
+    <div class="chart-card reveal" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);">
+      <div class="chart-label" style="color:rgba(253,250,244,0.45);">Tren aktual vs proyeksi naive seasonal — Daging Sapi dan Telur Ayam (Rp/kg)</div>
+      <div class="legend">
+        <span class="legend-item" style="color:rgba(253,250,244,0.65);"><span class="legend-dot" style="background:var(--sapi)"></span>Sapi aktual</span>
+        <span class="legend-item" style="color:rgba(253,250,244,0.65);"><span class="legend-dot" style="background:rgba(90,122,82,0.4);border:1px dashed var(--sapi);"></span>Sapi proyeksi</span>
+        <span class="legend-item" style="color:rgba(253,250,244,0.65);"><span class="legend-dot" style="background:var(--telur)"></span>Telur aktual</span>
+        <span class="legend-item" style="color:rgba(253,250,244,0.65);"><span class="legend-dot" style="background:rgba(196,82,42,0.4);border:1px dashed var(--telur);"></span>Telur proyeksi</span>
+      </div>
+      <div class="chart-area" style="height:190px;"><canvas id="c8"></canvas></div>
+    </div>
+
+    <div class="reveal" style="margin-top:28px;">
+      <div class="source-title" style="margin-bottom:16px;">Tim Peneliti Data</div>
+      <div class="team-grid">
+        <div class="team-member"><img src="https://i.pravatar.cc/150?img=11" alt=""><p>Argo Bima</p><span>Data Engineer</span></div>
+        <div class="team-member"><img src="https://i.pravatar.cc/150?img=5" alt=""><p>Sinta Nuria</p><span>Data Analyst</span></div>
+        <div class="team-member"><img src="https://i.pravatar.cc/150?img=15" alt=""><p>Faisal Akbar</p><span>Data Scientist</span></div>
+        <div class="team-member"><img src="https://i.pravatar.cc/150?img=9" alt=""><p>Diana Putri</p><span>UI/UX Designer</span></div>
+        <div class="team-member"><img src="https://i.pravatar.cc/150?img=13" alt=""><p>Kevin Pratama</p><span>Project Manager</span></div>
+      </div>
+    </div>
+
+    <div class="source-section reveal">
+      <div class="source-title">Sumber Data</div>
+      <div class="source-row">
+        <span class="source-badge">BPS — Harga Konsumen</span>
+        <span class="source-badge">Kemendag — Harga Pangan Strategis</span>
+        <span class="source-badge">TKPI 2017 (FR026, FR005, HR002)</span>
+        <span class="source-badge">BPS — UMP 2024–2026</span>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<script>
+/* ===== DATA DINAMIS DARI DATASET ===== */
+
+const DATA = {
+  latestDate: 'Apr 2026',
+  months: 28,
+  nat: { sapi: 145115, ayam: 42385, telur: 33253 },
+  yoy: { sapi: 3.6, ayam: 13.6, telur: 9.4 },
+  trendLabels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+  sapiTrend: [136235, 134451, 134428, 135451, 135867, 135632, 134854, 135419, 135285, 135350, 135274, 135087, 134901, 135301, 137088, 140125, 136671, 136603, 136618, 136959, 137101, 137274, 137351, 137688, 139374, 139779, 141279, 145115, null, null, null, null, null, null, null, null],
+  ayamTrend: [38193, 36041, 38376, 37968, 38001, 37812, 36950, 34879, 35156, 35201, 37700, 37512, 39654, 36834, 37468, 37315, 34487, 35824, 35196, 35857, 36669, 38841, 37838, 40328, 41615, 40301, 41525, 42385, null, null, null, null, null, null, null, null],
+  telurTrend: [29811, 29035, 31416, 31791, 31292, 30862, 30494, 29913, 29299, 29635, 29356, 29176, 31624, 30025, 30701, 30394, 30069, 29749, 29944, 30379, 30266, 30994, 31469, 32338, 32765, 31428, 32626, 33253, null, null, null, null, null, null, null, null],
+  sapiProj: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 145115, 141016, 140860, 140464, 140933, 140937, 141061, 141061, 141139],
+  telurProj: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 33253, 32070, 31677, 31587, 31511, 31131, 31687, 31789, 32149],
+  sapiProv: ["Kaltim", "Kalsel", "Kaltara", "Papua", "Sulut", "Kalbar", "Kalteng", "Aceh", "Papua Barat", "Jabar"], sapiVal: [166250, 163550, 160350, 157800, 156250, 155850, 155350, 152900, 152500, 152250],
+  ayamProv: ["Sumbar", "NTT", "Papua", "Kaltara", "Maluku", "Papua Barat", "Kalsel", "Maluku Ut.", "Sulut", "NTB"], ayamVal: [56750, 52450, 50900, 50750, 49000, 48350, 46600, 45500, 45350, 44650],
+  telurProv: ["Maluku Ut.", "Papua", "Gorontalo", "Maluku", "Papua Barat", "Sulteng", "Sultra", "Kalbar", "Kaltara", "Kalteng"], telurVal: [44100, 41100, 40200, 39200, 37350, 36950, 36600, 36350, 34450, 34400],
+  seasonal: { sapi: [136837, 136511, 137599, 140230, 136269, 136118, 135736, 136189, 136193, 136312, 136312, 136388], ayam: [39821, 37725, 39123, 39223, 36244, 36818, 36073, 35368, 35912, 37021, 37769, 38920], telur: [31400, 30163, 31581, 31813, 30681, 30305, 30219, 30146, 29783, 30315, 30412, 30757] },
+  seasonPeak: {
+    sapi: { peak: 'Apr', trough: 'Jul', amp: 3.3 },
+    ayam: { peak: 'Jan', trough: 'Agu', amp: 11.9 },
+    telur: { peak: 'Apr', trough: 'Sep', amp: 6.6 }
+  },
+  priceMap: {
+    sapi: {"Aceh": 152900, "Sumatera Utara": 137650, "Sumatera Barat": 150000, "Riau": 131150, "Kepulauan Riau": 127500, "Jambi": 151250, "Bengkulu": 147500, "Sumatera Selatan": 141900, "Kepulauan Bangka Belitung": 141250, "Lampung": 134100, "Banten": 147500, "Jawa Barat": 152250, "DKI Jakarta": 149700, "Jawa Tengah": 139050, "DI Yogyakarta": 150650, "Jawa Timur": 129550, "Bali": 134250, "Nusa Tenggara Barat": 125950, "Nusa Tenggara Timur": 116650, "Kalimantan Barat": 155850, "Kalimantan Selatan": 163550, "Kalimantan Tengah": 155350, "Kalimantan Timur": 166250, "Kalimantan Utara": 160350, "Gorontalo": 145000, "Sulawesi Selatan": 132400, "Sulawesi Tenggara": 141600, "Sulawesi Tengah": 150000, "Sulawesi Utara": 156250, "Sulawesi Barat": 135000, "Maluku": 151250, "Maluku Utara": 150000, "Papua": 157800, "Papua Barat": 152500},
+    ayam: {"Aceh": 40500, "Sumatera Utara": 43500, "Sumatera Barat": 56750, "Riau": 35750, "Kepulauan Riau": 42700, "Jambi": 41600, "Bengkulu": 43150, "Sumatera Selatan": 37750, "Kepulauan Bangka Belitung": 43150, "Lampung": 35000, "Banten": 41000, "Jawa Barat": 40200, "DKI Jakarta": 42750, "Jawa Tengah": 40050, "DI Yogyakarta": 39000, "Jawa Timur": 38200, "Bali": 43650, "Nusa Tenggara Barat": 44650, "Nusa Tenggara Timur": 52450, "Kalimantan Barat": 37650, "Kalimantan Selatan": 46600, "Kalimantan Tengah": 40000, "Kalimantan Timur": 38950, "Kalimantan Utara": 50750, "Gorontalo": 36800, "Sulawesi Selatan": 34650, "Sulawesi Tenggara": 39700, "Sulawesi Tengah": 38850, "Sulawesi Utara": 45350, "Sulawesi Barat": 36250, "Maluku": 49000, "Maluku Utara": 45500, "Papua": 50900, "Papua Barat": 48350},
+    telur: {"Aceh": 31800, "Sumatera Utara": 33600, "Sumatera Barat": 30000, "Riau": 31350, "Kepulauan Riau": 30700, "Jambi": 27900, "Bengkulu": 29750, "Sumatera Selatan": 29750, "Kepulauan Bangka Belitung": 33750, "Lampung": 30500, "Banten": 31350, "Jawa Barat": 30500, "DKI Jakarta": 31350, "Jawa Tengah": 29100, "DI Yogyakarta": 29000, "Jawa Timur": 29050, "Bali": 30650, "Nusa Tenggara Barat": 30750, "Nusa Tenggara Timur": 34150, "Kalimantan Barat": 36350, "Kalimantan Selatan": 33500, "Kalimantan Tengah": 34400, "Kalimantan Timur": 32550, "Kalimantan Utara": 34450, "Gorontalo": 40200, "Sulawesi Selatan": 32350, "Sulawesi Tenggara": 36600, "Sulawesi Tengah": 36950, "Sulawesi Utara": 34350, "Sulawesi Barat": 32150, "Maluku": 39200, "Maluku Utara": 44100, "Papua": 41100, "Papua Barat": 37350}
+  },
+  scatter: [{"x": 3685616, "y": 152900, "label": "Aceh", "island": "Sumatera"}, {"x": 2992559, "y": 137650, "label": "Sumut", "island": "Sumatera"}, {"x": 2994193, "y": 150000, "label": "Sumbar", "island": "Sumatera"}, {"x": 3508776, "y": 131150, "label": "Riau", "island": "Sumatera"}, {"x": 3623654, "y": 127500, "label": "Kep. Riau", "island": "Sumatera"}, {"x": 3234535, "y": 151250, "label": "Jambi", "island": "Sumatera"}, {"x": 2670039, "y": 147500, "label": "Bengkulu", "island": "Sumatera"}, {"x": 3681571, "y": 141900, "label": "Sumsel", "island": "Sumatera"}, {"x": 3876600, "y": 141250, "label": "Babel", "island": "Sumatera"}, {"x": 2893070, "y": 134100, "label": "Lampung", "island": "Sumatera"}, {"x": 2905119, "y": 147500, "label": "Banten", "island": "Jawa"}, {"x": 2191232, "y": 152250, "label": "Jabar", "island": "Jawa"}, {"x": 5396761, "y": 149700, "label": "DKI", "island": "Jawa"}, {"x": 2169349, "y": 139050, "label": "Jateng", "island": "Jawa"}, {"x": 2264080, "y": 150650, "label": "DIY", "island": "Jawa"}, {"x": 2305985, "y": 129550, "label": "Jatim", "island": "Jawa"}, {"x": 2996561, "y": 134250, "label": "Bali", "island": "Nusa Tenggara & Bali"}, {"x": 2602931, "y": 125950, "label": "NTB", "island": "Nusa Tenggara & Bali"}, {"x": 2328969, "y": 116650, "label": "NTT", "island": "Nusa Tenggara & Bali"}, {"x": 2878286, "y": 155850, "label": "Kalbar", "island": "Kalimantan"}, {"x": 3496195, "y": 163550, "label": "Kalsel", "island": "Kalimantan"}, {"x": 3473621, "y": 155350, "label": "Kalteng", "island": "Kalimantan"}, {"x": 3579313, "y": 166250, "label": "Kaltim", "island": "Kalimantan"}, {"x": 3580160, "y": 160350, "label": "Kaltara", "island": "Kalimantan"}, {"x": 3221731, "y": 145000, "label": "Gorontalo", "island": "Sulawesi"}, {"x": 3657527, "y": 132400, "label": "Sulsel", "island": "Sulawesi"}, {"x": 3073551, "y": 141600, "label": "Sultra", "island": "Sulawesi"}, {"x": 2915000, "y": 150000, "label": "Sulteng", "island": "Sulawesi"}, {"x": 3775425, "y": 156250, "label": "Sulut", "island": "Sulawesi"}, {"x": 3104430, "y": 135000, "label": "Sulbar", "island": "Sulawesi"}, {"x": 3141700, "y": 151250, "label": "Maluku", "island": "Maluku & Papua"}, {"x": 3408000, "y": 150000, "label": "Maluku Ut.", "island": "Maluku & Papua"}, {"x": 4285849, "y": 157800, "label": "Papua", "island": "Maluku & Papua"}, {"x": 3614500, "y": 152500, "label": "Papua Barat", "island": "Maluku & Papua"}],
+  lollipop: {
+    sapi: { max: 166250, min: 116650, maxProv: 'Kaltim', minProv: 'NTT' },
+    ayam: { max: 56750, min: 34650 },
+    telur: { max: 44100, min: 27900 }
+  },
+  gaapPct: { sapi: 43 },
+  affLabels: ["NTT", "Jabar", "Maluku Ut.", "Jateng", "Kalbar", "Sulteng", "NTB", "Gorontalo", "DIY", "Jatim"],
+  affVals: [2.0, 1.9, 1.8, 1.8, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7],
+  protein: {
+    sapiPer1k: 0.13,
+    ayamPer1k: 0.429,
+    telurPer1k: 0.373,
+    telurSapiRatio: 2.9
+  },
+  proteinCost: {
+    sapiDaily: 46313, ayamDaily: 13973, telurDaily: 16090,
+    sapiMonthly: 1389390, ayamMonthly: 419190, telurMonthly: 482700,
+    sapiPctUmp: 40.6, ayamPctUmp: 12.3, telurPctUmp: 14.1
+  },
+  sapi28mChange: 8880,
+  sapi28mPct: 6.5,
+  nttPct: 2.0,
+  nutrisi: [{"bahan": "Daging sapi", "kalori": 201.0, "protein": 18.8, "lemak": 14.0, "karbo": 0.0}, {"bahan": "Daging ayam", "kalori": 298.0, "protein": 18.2, "lemak": 25.0, "karbo": 0.0}, {"bahan": "Telur Ayam", "kalori": 154.0, "protein": 12.4, "lemak": 10.8, "karbo": 0.7}],
+  cv: { telur: 4.9, ayam: 7.7 }
+};
+
+/* ========================================= */
+
+/* NAV */
+const sections = document.querySelectorAll('section[id]');
+const navDots  = document.getElementById('navDots');
+sections.forEach((s, i) => {
+  const d = document.createElement('button');
+  d.className = 'nav-dot';
+  d.textContent = String(i + 1).padStart(2, '0');
+  d.title = s.dataset.label || '';
+  d.onclick = () => s.scrollIntoView({behavior:'smooth'});
+  navDots.appendChild(d);
+});
+const allDots = navDots.querySelectorAll('.nav-dot');
+function updateNav() {
+  let cur = 0;
+  sections.forEach((s, i) => { if (s.getBoundingClientRect().top <= window.innerHeight * .55) cur = i; });
+  allDots.forEach((d, i) => d.classList.toggle('active', i === cur));
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  document.getElementById('progress').style.width = Math.min(pct, 100) + '%';
+}
+window.addEventListener('scroll', updateNav, {passive:true});
+updateNav();
+
+/* REVEAL */
+const ro = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: .1});
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+/* TABS */
+function switchTab(g, id, btn) {
+  document.querySelectorAll('[id^="' + g + '-"]').forEach(p => p.classList.remove('active'));
+  document.getElementById(g + '-' + id).classList.add('active');
+  btn.closest('.tab-row').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (g === 'land') { setTimeout(()=>Object.values(leafletMaps).forEach(m=>m.invalidateSize()),80); }
+}
+
+/* CHART BASE CONFIG */
+const C    = {sapi:'#5A7A52', ayam:'#C9952A', telur:'#C4522A'};
+const sA   = 'rgba(90,122,82,0.1)';
+const aA   = 'rgba(201,149,42,0.1)';
+const tA   = 'rgba(196,82,42,0.1)';
+const grid = 'rgba(92,61,30,0.055)';
+const tick = '#9A8060';
+const fnt  = 'DM Sans';
+const base = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {legend:{display:false}},
+  scales: {
+    x: {ticks:{color:tick,font:{family:fnt,size:10}}, grid:{color:grid}, border:{color:'transparent'}},
+    y: {ticks:{color:tick,font:{family:fnt,size:10}}, grid:{color:grid}, border:{color:'transparent'}}
+  }
+};
+
+/* ── POPULATE HERO KPIs DINAMIS ── */
+(function populateKPIs() {
+  function fmt(n) { return Math.round(n).toLocaleString('id-ID'); }
+  
+  // Hero KPIs
+  document.getElementById('kpi-sapi-val').textContent = 'Rp ' + (DATA.nat.sapi/1000).toFixed(1) + 'rb';
+  document.getElementById('kpi-ayam-val').textContent = 'Rp ' + (DATA.nat.ayam/1000).toFixed(1) + 'rb';
+  document.getElementById('kpi-telur-val').textContent = 'Rp ' + (DATA.nat.telur/1000).toFixed(1) + 'rb';
+  const sapiYoy = document.getElementById('kpi-sapi-yoy');
+  const ayamYoy = document.getElementById('kpi-ayam-yoy');
+  const telurYoy = document.getElementById('kpi-telur-yoy');
+  if (sapiYoy) { sapiYoy.textContent = (DATA.yoy.sapi > 0 ? '↑' : '↓') + ' ' + Math.abs(DATA.yoy.sapi) + '% YoY'; sapiYoy.className = 'hero-kpi-badge ' + (DATA.yoy.sapi > 0 ? 'badge-up' : 'badge-dn'); }
+  if (ayamYoy) { ayamYoy.textContent = (DATA.yoy.ayam > 0 ? '↑' : '↓') + ' ' + Math.abs(DATA.yoy.ayam) + '% YoY'; ayamYoy.className = 'hero-kpi-badge ' + (DATA.yoy.ayam > 0 ? 'badge-up' : 'badge-dn'); }
+  if (telurYoy) { telurYoy.textContent = (DATA.yoy.telur > 0 ? '↑' : '↓') + ' ' + Math.abs(DATA.yoy.telur) + '% YoY'; telurYoy.className = 'hero-kpi-badge ' + (DATA.yoy.telur > 0 ? 'badge-up' : 'badge-dn'); }
+
+  // Scene 1 KPI cards (termahal)
+  const kpiCards = document.querySelectorAll('.kpi-row.reveal .kpi-card');
+  if (kpiCards.length >= 3) {
+    kpiCards[0].querySelector('.kpi-val').textContent = DATA.sapiProv[0];
+    kpiCards[0].querySelector('.kpi-unit').textContent = 'rata-rata Rp ' + fmt(DATA.sapiVal[0]) + '/kg';
+    kpiCards[1].querySelector('.kpi-val').textContent = DATA.ayamProv[0];
+    kpiCards[1].querySelector('.kpi-unit').textContent = 'rata-rata Rp ' + fmt(DATA.ayamVal[0]) + '/kg';
+    kpiCards[2].querySelector('.kpi-val').textContent = DATA.telurProv[0];
+    kpiCards[2].querySelector('.kpi-unit').textContent = 'rata-rata Rp ' + fmt(DATA.telurVal[0]) + '/kg';
+  }
+
+  // Scene 2 KPI (tren): kpi-row in sec-cream
+  const trendSection = document.getElementById('s3');
+  if (trendSection) {
+    const tCards = trendSection.querySelectorAll('.kpi-card');
+    if (tCards.length >= 2) {
+      // Kenaikan kumulatif sapi
+      const changeEl = tCards[1].querySelector('.kpi-val');
+      const changeNote = tCards[1].querySelector('.kpi-note');
+      if (changeEl) changeEl.textContent = '+' + DATA.sapi28mPct + '%';
+      if (changeNote) changeNote.textContent = 'Dari Rp ' + fmt(DATA.sapiTrend[0]) + ' → Rp ' + fmt(DATA.nat.sapi) + '/kg, tanpa koreksi';
+    }
+    if (tCards.length >= 3) {
+      const cvNote = tCards[2].querySelector('.kpi-note');
+      if (cvNote) cvNote.textContent = 'CV ~' + DATA.cv.telur + '% — separuh volatilitas ayam (' + DATA.cv.ayam + '%)';
+    }
+  }
+
+  // Scene 3 seasonal summary pills
+  const seasonSection = document.getElementById('s4');
+  if (seasonSection) {
+    const pills = seasonSection.querySelectorAll('.season-pill');
+    // sapi: 3 pills (puncak, termurah, amplitudo)
+    if (pills.length >= 9) {
+      // sapi
+      pills[0].querySelector('.season-pill-val').textContent = DATA.seasonPeak.sapi.peak;
+      pills[1].querySelector('.season-pill-val').textContent = DATA.seasonPeak.sapi.trough;
+      pills[2].querySelector('.season-pill-val').textContent = '+' + DATA.seasonPeak.sapi.amp + '%';
+      // ayam
+      pills[3].querySelector('.season-pill-val').textContent = DATA.seasonPeak.ayam.peak + ' dan ' + DATA.seasonPeak.telur.peak;
+      pills[4].querySelector('.season-pill-val').textContent = DATA.seasonPeak.ayam.trough;
+      pills[5].querySelector('.season-pill-val').textContent = '+' + DATA.seasonPeak.ayam.amp + '%';
+      // telur
+      pills[6].querySelector('.season-pill-val').textContent = DATA.seasonPeak.telur.peak + ' dan Des';
+      pills[7].querySelector('.season-pill-val').textContent = DATA.seasonPeak.telur.trough;
+      pills[8].querySelector('.season-pill-val').textContent = '+' + DATA.seasonPeak.telur.amp + '%';
+    }
+  }
+
+  // Scene 5 (Nutrisi) nbar values from DATA.nutrisi
+  const nutSection = document.getElementById('s6');
+  if (nutSection) {
+    // Sapi card
+    const nutCards = nutSection.querySelectorAll('.nut-card');
+    const nutData = DATA.nutrisi;
+    const maxNut = { protein: 27.4, lemak: 25.0, kalori: 298, karbo: 2.0 };
+    nutCards.forEach((card, ci) => {
+      if (!nutData[ci]) return;
+      const nd = nutData[ci];
+      const rows = card.querySelectorAll('.nbar-row');
+      if (rows.length >= 4) {
+        const prot = rows[0]; const lemak = rows[1]; const kal = rows[2]; const karbo = rows[3];
+        prot.querySelector('.nbar-fill').style.width = (nd.protein/maxNut.protein*100).toFixed(0)+'%';
+        prot.querySelector('.nbar-val').textContent = nd.protein.toFixed(1).replace('.',',') + ' g';
+        lemak.querySelector('.nbar-fill').style.width = (nd.lemak/maxNut.lemak*100).toFixed(0)+'%';
+        lemak.querySelector('.nbar-val').textContent = nd.lemak.toFixed(1).replace('.',',') + ' g';
+        kal.querySelector('.nbar-fill').style.width = (nd.kalori/maxNut.kalori*100).toFixed(0)+'%';
+        kal.querySelector('.nbar-val').textContent = Math.round(nd.kalori) + ' kal';
+        karbo.querySelector('.nbar-fill').style.width = Math.max(1,(nd.karbo/maxNut.karbo*100)).toFixed(0)+'%';
+        karbo.querySelector('.nbar-val').textContent = nd.karbo.toFixed(1).replace('.',',') + ' g';
+      }
+    });
+    // Transition banner protein per Rp1000
+    const bannerP = nutSection.querySelector('.transition-banner p');
+    if (bannerP) {
+      bannerP.innerHTML = 'Dari analisis di atas, telur terbukti adalah sumber protein paling efisien: <strong style="color:var(--gold2);">' + DATA.protein.telurPer1k.toFixed(2) + 'g protein per Rp 1.000</strong>, hampir ' + DATA.protein.telurSapiRatio + 'x lebih efisien dari sapi (' + DATA.protein.sapiPer1k.toFixed(2) + 'g). Tapi ketika kita bandingkan dengan UMR — gambaran yang muncul jauh lebih kompleks. Apakah telur benar-benar "terjangkau" bagi semua orang?';
+    }
+  }
+
+  // Scene 6 (Daya Beli) KPI cards
+  const dbSection = document.getElementById('s7');
+  if (dbSection) {
+    const dbCards = dbSection.querySelectorAll('.kpi-card');
+    if (dbCards.length >= 3) {
+      // Sapi
+      dbCards[0].querySelector('.kpi-val').innerHTML = 'Rp ' + fmt(DATA.proteinCost.sapiDaily) + '<span style="font-size:11px;color:var(--text3);font-family:\'DM Sans\',sans-serif;">/hari</span>';
+      dbCards[0].querySelector('.kpi-note').innerHTML = '<strong>Rp ' + fmt(DATA.proteinCost.sapiMonthly) + '/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--rust);font-weight:600;">' + DATA.proteinCost.sapiPctUmp + '% UMP nasional</span>';
+      // Ayam
+      dbCards[1].querySelector('.kpi-val').innerHTML = 'Rp ' + fmt(DATA.proteinCost.ayamDaily) + '<span style="font-size:11px;color:var(--text3);font-family:\'DM Sans\',sans-serif;">/hari</span>';
+      dbCards[1].querySelector('.kpi-note').innerHTML = '<strong>Rp ' + fmt(DATA.proteinCost.ayamMonthly) + '/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--brown3);font-weight:600;">' + DATA.proteinCost.ayamPctUmp + '% UMP nasional</span>';
+      // Telur
+      dbCards[2].querySelector('.kpi-val').innerHTML = 'Rp ' + fmt(DATA.proteinCost.telurDaily) + '<span style="font-size:11px;color:var(--text3);font-family:\'DM Sans\',sans-serif;">/hari</span>';
+      dbCards[2].querySelector('.kpi-note').innerHTML = '<strong>Rp ' + fmt(DATA.proteinCost.telurMonthly) + '/bulan</strong> &nbsp;·&nbsp; <span style="color:var(--sage);font-weight:600;">' + DATA.proteinCost.telurPctUmp + '% UMP nasional</span>';
+    }
+    // Story callout
+    const storyCallout = dbSection.querySelector('.story-callout');
+    if (storyCallout) {
+      storyCallout.innerHTML = 'Ironi yang terlihat dari data: NTT, salah satu provinsi dengan UMP terendah, justru membayar telur paling mahal sebagai proporsi penghasilan (' + DATA.nttPct + '% UMP). Sementara DKI Jakarta, dengan UMP tertinggi, hanya mengalokasikan sekitar ' + (100 - DATA.nttPct*4.5).toFixed(1) + '% UMP untuk kebutuhan protein yang sama.';
+    }
+  }
+
+  // Summary stat strip (4 stats)
+  const statStrip = document.querySelector('[style*="grid-template-columns:repeat(4,1fr)"]');
+  if (statStrip) {
+    const statCells = statStrip.querySelectorAll('div[style*="background:rgba"]');
+    if (statCells.length >= 4) {
+      statCells[0].querySelector('div:first-child').textContent = DATA.protein.telurSapiRatio + '×';
+      statCells[1].querySelector('div:first-child').textContent = DATA.gaapPct.sapi + '%';
+      statCells[2].querySelector('div:first-child').textContent = DATA.seasonPeak.ayam.amp + '%';
+      statCells[3].querySelector('div:first-child').textContent = DATA.affVals[0] + '%';
+    }
+  }
+
+  // Takeaway cards
+  const takeaway = document.querySelectorAll('.takeaway-card');
+  if (takeaway.length >= 3) {
+    takeaway[0].querySelector('.takeaway-text').innerHTML = '<strong>Telur adalah protein paling efisien per rupiah</strong>, menghasilkan ' + DATA.protein.telurSapiRatio + 'x lebih banyak protein per Rp 1.000 dibanding sapi. Tapi di NTT, bebannya terhadap UMP mencapai ' + DATA.nttPct + '%.';
+    takeaway[1].querySelector('.takeaway-text').innerHTML = '<strong>Harga ayam adalah yang paling fluktuatif</strong>: amplitudo musiman ' + DATA.seasonPeak.ayam.amp + '% vs sapi ' + DATA.seasonPeak.sapi.amp + '%. Keluarga yang bergantung pada ayam menanggung ketidakpastian pengeluaran terbesar.';
+    takeaway[2].querySelector('.takeaway-text').innerHTML = '<strong>Gap wilayah tidak ada tanda mereda</strong>: ' + DATA.lollipop.sapi.maxProv + ' membayar sapi rata-rata ' + DATA.gaapPct.sapi + '% lebih mahal dari ' + DATA.lollipop.sapi.minProv + ', dan pola ini konsisten sepanjang ' + DATA.months + ' bulan data.';
+  }
+})();
+
+/* ── INDONESIA CHOROPLETH MAP — Leaflet + GeoJSON ── */
+const priceData = DATA.priceMap;
+const mapColors = { sapi:'#5A7A52', ayam:'#C9952A', telur:'#C4522A' };
+const geoJsonUrl = 'https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json';
+const leafletMaps = {};
+let geoCache = null;
+function hexToRgb(hex){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return {r,g,b}; }
+function normalizeProvName(raw) {
+  const s = String(raw||'').replace(/^Provinsi\s+/i,'').replace(/D\.I\.\s*/i,'DI ').trim().toLowerCase();
+  const aliases = {'aceh':'Aceh','sumatera utara':'Sumatera Utara','sumatera barat':'Sumatera Barat','riau':'Riau','kepulauan riau':'Kepulauan Riau','jambi':'Jambi','sumatera selatan':'Sumatera Selatan','kepulauan bangka belitung':'Bangka Belitung','bangka belitung':'Bangka Belitung','bengkulu':'Bengkulu','lampung':'Lampung','dki jakarta':'DKI Jakarta','jakarta raya':'DKI Jakarta','jawa barat':'Jawa Barat','banten':'Banten','jawa tengah':'Jawa Tengah','di yogyakarta':'DI Yogyakarta','daerah istimewa yogyakarta':'DI Yogyakarta','yogyakarta':'DI Yogyakarta','jawa timur':'Jawa Timur','bali':'Bali','nusa tenggara barat':'Nusa Tenggara Barat','nusa tenggara timur':'Nusa Tenggara Timur','kalimantan barat':'Kalimantan Barat','kalimantan tengah':'Kalimantan Tengah','kalimantan selatan':'Kalimantan Selatan','kalimantan timur':'Kalimantan Timur','kalimantan utara':'Kalimantan Utara','sulawesi utara':'Sulawesi Utara','gorontalo':'Gorontalo','sulawesi tengah':'Sulawesi Tengah','sulawesi barat':'Sulawesi Barat','sulawesi selatan':'Sulawesi Selatan','sulawesi tenggara':'Sulawesi Tenggara','maluku':'Maluku','maluku utara':'Maluku Utara','papua barat':'Papua Barat','papua':'Papua'};
+  return aliases[s] || raw;
+}
+function getFeatureName(f){ const p=f.properties||{}; return normalizeProvName(p.Propinsi||p.provinsi||p.PROVINSI||p.name||p.NAME_1||p.NAME||p.state||''); }
+async function fetchGeo() {
+  if (geoCache) return geoCache;
+  const res = await fetch(geoJsonUrl);
+  geoCache = await res.json();
+  return geoCache;
+}
+async function buildLeafletMap(containerId, commodity, opts={}) {
+  const container = document.getElementById(containerId);
+  if (!container || container.dataset.built) return;
+  container.dataset.built = '1';
+  const mapDivId = 'lmap-' + containerId;
+  container.innerHTML = `<div id="${mapDivId}" style="width:100%;height:100%;"></div>`;
+  const data = priceData[commodity], vals = Object.values(data);
+  const minV = Math.min(...vals), maxV = Math.max(...vals), rgb = hexToRgb(mapColors[commodity]);
+  const labels = {sapi:'Daging Sapi', ayam:'Daging Ayam', telur:'Telur Ayam'};
+  function colorFor(v) {
+    if (!v) return 'rgba(210,200,185,0.3)';
+    const t = (v-minV)/(maxV-minV), a = 0.18+t*0.82;
+    return `rgba(${rgb.r},${rgb.g},${rgb.b},${a.toFixed(2)})`;
+  }
+  const mapOpts = Object.assign({zoomControl:true,attributionControl:true,scrollWheelZoom:false,dragging:true,doubleClickZoom:false,boxZoom:false,keyboard:false}, opts.mapOpts||{});
+  const map = L.map(mapDivId, mapOpts).setView([-2.4,118], opts.zoom||4);
+  leafletMaps[containerId] = map;
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,minZoom:3,opacity:opts.tileOpacity||0.55,attribution:'© OpenStreetMap © CARTO'}).addTo(map);
+  try {
+    const geo = await fetchGeo();
+    const layer = L.geoJSON(geo, {
+      style: f => { const v=data[getFeatureName(f)]; return {fillColor:colorFor(v),fillOpacity:0.92,color:opts.borderColor||'#FDFAF4',weight:0.75,opacity:1}; },
+      onEachFeature: (f,l) => {
+        const name=getFeatureName(f), v=data[name];
+        l.bindTooltip(`<strong>${name}</strong><br><span style="font-family:DM Mono,monospace;color:#E8B84B;">Rp ${Number(v||0).toLocaleString('id-ID')}/kg</span><br><span style="opacity:.7;font-size:9.5px;">${labels[commodity]}</span>`,{sticky:true,direction:'top'});
+        l.on({mouseover:e=>e.target.setStyle({weight:1.5,color:'#5C3D1E',fillOpacity:1}),mouseout:e=>l.resetStyle(e.target)});
+      }
+    }).addTo(map);
+    map.fitBounds(layer.getBounds(),{padding:[6,6]});
+  } catch(e) {
+    container.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text3);font-size:11px;padding:16px;">Peta gagal dimuat. Butuh koneksi internet.</div>`;
+  }
+}
+
+// Hero map (telur, dark tile)
+buildLeafletMap('hero-map-wrap','telur',{zoom:4,tileOpacity:0.2,borderColor:'rgba(255,255,255,0.3)',mapOpts:{zoomControl:false,attributionControl:true,scrollWheelZoom:false,dragging:false,doubleClickZoom:false}});
+
+// Scene 2 maps
+buildLeafletMap('map-sapi-wrap','sapi');
+buildLeafletMap('map-ayam-wrap','ayam');
+buildLeafletMap('map-telur-wrap','telur');
+setTimeout(()=>Object.values(leafletMaps).forEach(m=>m.invalidateSize()),600);
+
+/* ── SCENE 1: PROVINCE RANKING BARS — DINAMIS ── */
+const sapiProv  = DATA.sapiProv;
+const sapiVal   = DATA.sapiVal;
+const ayamProv  = DATA.ayamProv;
+const ayamVal   = DATA.ayamVal;
+const telurProv = DATA.telurProv;
+const telurVal  = DATA.telurVal;
+
+function makeBar(id, labels, data, color, dimColor, fmt) {
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: data.map((_, i) => i < 3 ? color : dimColor),
+        borderWidth: 0,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      ...base,
+      indexAxis: 'y',
+      plugins: {
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>'Rp '+ctx.parsed.x.toLocaleString('id-ID')}}
+      },
+      scales: {
+        x: {ticks:{color:tick,font:{family:fnt,size:9},callback:fmt}, grid:{color:grid}, border:{color:'transparent'}},
+        y: {ticks:{color:tick,font:{family:fnt,size:9}}, grid:{color:'transparent'}, border:{color:'transparent'}}
+      }
+    }
+  });
+}
+const fmtRb = v => 'Rp' + (v/1000).toFixed(0) + 'rb';
+makeBar('c2a', sapiProv,  sapiVal,  C.sapi,  'rgba(90,122,82,0.28)',   fmtRb);
+makeBar('c2b', ayamProv,  ayamVal,  C.ayam,  'rgba(201,149,42,0.28)',  fmtRb);
+makeBar('c2c', telurProv, telurVal, C.telur, 'rgba(196,82,42,0.28)',   fmtRb);
+
+/* ── SCENE 2: NATIONAL TREND — DINAMIS ── */
+const trendLabels = DATA.trendLabels.slice(0, DATA.months);
+const sapiTrend  = DATA.sapiTrend.slice(0, DATA.months);
+const ayamTrend  = DATA.ayamTrend.slice(0, DATA.months);
+const telurTrend = DATA.telurTrend.slice(0, DATA.months);
+
+new Chart(document.getElementById('c3a'), {
+  type: 'line',
+  data: {
+    labels: trendLabels,
+    datasets: [
+      {data:sapiTrend,  borderColor:C.sapi,  backgroundColor:sA, borderWidth:2, pointRadius:0, tension:.3, fill:true, yAxisID:'y1'},
+      {data:ayamTrend,  borderColor:C.ayam,  backgroundColor:aA, borderWidth:2, pointRadius:0, tension:.3, fill:true},
+      {data:telurTrend, borderColor:C.telur, backgroundColor:tA, borderWidth:2, pointRadius:0, tension:.3, fill:true}
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend:{display:false},
+      tooltip:{
+        mode:'index',
+        intersect:false,
+        callbacks:{
+          label:ctx=>{
+            const names=['Sapi','Ayam','Telur'];
+            return (names[ctx.datasetIndex]||'') + ': Rp' + ctx.parsed.y.toLocaleString('id-ID');
+          }
+        }
+      }
+    },
+    scales: {
+      x: {ticks:{color:tick,font:{family:fnt,size:8.5},maxTicksLimit:14,maxRotation:0}, grid:{color:grid}, border:{color:'transparent'}},
+      y: {ticks:{color:tick,font:{family:fnt,size:9},callback:v=>'Rp'+(v/1000).toFixed(0)+'rb'}, grid:{color:grid}, border:{color:'transparent'}},
+      y1: {display:false, min:120000, max:160000}
+    }
+  }
+});
+
+/* ── SCENE 3: SEASONAL HEATMAP — DINAMIS ── */
+const seasonLabels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const sapiSeas  = DATA.seasonal.sapi;
+const ayamSeas  = DATA.seasonal.ayam;
+const telurSeas = DATA.seasonal.telur;
+
+const c5el = document.getElementById('c5');
+if (c5el) new Chart(c5el, {
+  type: 'line',
+  data: {
+    labels: seasonLabels,
+    datasets: [
+      {data:ayamSeas,  borderColor:C.ayam,  backgroundColor:aA, borderWidth:2, pointRadius:3, pointBackgroundColor:C.ayam, tension:.4, fill:true},
+      {data:telurSeas, borderColor:C.telur, backgroundColor:tA, borderWidth:2, pointRadius:3, pointBackgroundColor:C.telur, tension:.4, fill:true}
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend:{display:false},
+      tooltip:{
+        mode:'index',intersect:false,
+        callbacks:{label:ctx=>(ctx.datasetIndex===0?'Ayam':'Telur')+': Rp'+ctx.parsed.y.toLocaleString('id-ID')}
+      }
+    },
+    scales: {
+      x: {ticks:{color:tick,font:{family:fnt,size:10}}, grid:{color:grid}, border:{color:'transparent'}},
+      y: {ticks:{color:tick,font:{family:fnt,size:9},callback:v=>'Rp'+(v/1000).toFixed(0)+'rb'}, grid:{color:grid}, border:{color:'transparent'}}
+    }
+  }
+});
+
+// Build heatmap
+(function buildHeatmap() {
+  const hmContainer = document.getElementById('heatmap-wrap');
+  const rows = [
+    {label:'Sapi', data:sapiSeas, color:'5A,7A,52'},
+    {label:'Ayam', data:ayamSeas, color:'C9,95,2A'},
+    {label:'Telur', data:telurSeas, color:'C4,52,2A'}
+  ];
+  let html = '<div class="hm-wrap"><table class="hm-table" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:60px;"></th>';
+  seasonLabels.forEach(m => { html += `<th class="hm-th">${m}</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    const minV = Math.min(...row.data);
+    const maxV = Math.max(...row.data);
+    const [rh,gh,bh] = row.color.split(',');
+    html += `<tr><td class="hm-td-label">${row.label}</td>`;
+    row.data.forEach((v, i) => {
+      const intensity = (v - minV) / (maxV - minV);
+      const alpha = 0.1 + intensity * 0.85;
+      const textC = intensity > 0.55 ? '#fff' : '#5C4A30';
+      html += `<td style="padding:1px;"><div class="hm-cell" style="background:rgba(${parseInt(rh,16)},${parseInt(gh,16)},${parseInt(bh,16)},${alpha.toFixed(2)});display:flex;align-items:center;justify-content:center;" 
+        title="${row.label} ${seasonLabels[i]}: Rp ${v.toLocaleString('id-ID')}">
+        <span style="font-family:'DM Mono',monospace;font-size:9.5px;color:${textC};font-weight:600;">${(v/1000).toFixed(0)}</span>
+      </div></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  hmContainer.innerHTML = html;
+})();
+
+/* ── SCENE 4: SCATTER + GAP LOLLIPOP ── */
+const scatterData = DATA.scatter;
+
+const islandColors = {
+  'Jawa': '#C4522A',
+  'Sumatera': '#C9952A',
+  'Kalimantan': '#5A7A52',
+  'Sulawesi': '#6B7FBF',
+  'Maluku & Papua': '#9B5E9B',
+  'Nusa Tenggara & Bali': '#2A9BC4'
+};
+const islandBg = {
+  'Jawa': 'rgba(196,82,42,0.75)',
+  'Sumatera': 'rgba(201,149,42,0.75)',
+  'Kalimantan': 'rgba(90,122,82,0.75)',
+  'Sulawesi': 'rgba(107,127,191,0.75)',
+  'Maluku & Papua': 'rgba(155,94,155,0.75)',
+  'Nusa Tenggara & Bali': 'rgba(42,155,196,0.75)'
+};
+
+new Chart(document.getElementById('c4a'), {
+  type: 'scatter',
+  data: {
+    datasets: Object.keys(islandColors).map(island => ({
+      label: island,
+      data: scatterData.filter(d => d.island === island).map(d => ({x:d.x, y:d.y, label:d.label})),
+      backgroundColor: islandBg[island],
+      borderColor: islandColors[island],
+      borderWidth: 1.5,
+      pointRadius: 6,
+      pointHoverRadius: 9
+    }))
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {font:{family:fnt,size:9.5},color:tick,boxWidth:9,padding:10,usePointStyle:true,pointStyle:'circle'}
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const pt = ctx.raw;
+            const d = scatterData.find(d => d.x === pt.x && d.y === pt.y);
+            return (d ? d.label : '') + ' — UMP: Rp' + (pt.x/1e6).toFixed(1) + 'jt | Sapi: Rp' + (pt.y/1000).toFixed(0) + 'rb';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks:{color:tick,font:{family:fnt,size:9},callback:v=>'Rp'+(v/1e6).toFixed(1)+'jt'},
+        grid:{color:grid}, border:{color:'transparent'},
+        title:{display:true,text:'UMP 2025 (Rp/bulan)',color:tick,font:{size:9,family:fnt}}
+      },
+      y: {
+        ticks:{color:tick,font:{family:fnt,size:9},callback:v=>'Rp'+(v/1000).toFixed(0)+'rb'},
+        grid:{color:grid}, border:{color:'transparent'},
+        title:{display:true,text:'Harga Sapi Apr 2026 (Rp/kg)',color:tick,font:{size:9,family:fnt}},
+        min:100000, max:180000
+      }
+    }
+  }
+});
+
+// Gap Lollipop
+(function buildLollipop() {
+  const wrap = document.getElementById('gap-lollipop');
+  const items = [
+    {label:'Daging Sapi', max: DATA.lollipop.sapi.max, min: DATA.lollipop.sapi.min, color:C.sapi},
+    {label:'Daging Ayam', max: DATA.lollipop.ayam.max, min: DATA.lollipop.ayam.min, color:C.ayam},
+    {label:'Telur Ayam',  max: DATA.lollipop.telur.max, min: DATA.lollipop.telur.min, color:C.telur}
+  ];
+  let html = '<div style="padding:8px 0;">';
+  items.forEach(item => {
+    const gap = item.max - item.min;
+    const pctMax = (item.max / 170000 * 100).toFixed(1);
+    const pctMin = (item.min / 170000 * 100).toFixed(1);
+    html += `<div style="margin-bottom:22px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+        <span style="font-size:11.5px;color:var(--text2);">${item.label}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);">Gap: Rp ${gap.toLocaleString('id-ID')}</span>
+      </div>
+      <div style="position:relative;height:16px;display:flex;align-items:center;">
+        <div style="position:absolute;left:0;right:0;height:2px;background:var(--cream3);border-radius:1px;"></div>
+        <div style="position:absolute;left:${pctMin}%;width:${(pctMax-pctMin)}%;height:2px;background:${item.color};border-radius:1px;"></div>
+        <div style="position:absolute;left:${pctMin}%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 2px #fff;" title="Min: Rp ${item.min.toLocaleString('id-ID')}"></div>
+        <div style="position:absolute;left:${pctMax}%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:${item.color};box-shadow:0 0 0 2px #fff;" title="Max: Rp ${item.max.toLocaleString('id-ID')}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:8.5px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;">
+        
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+})();
+
+/* ── SCENE 5: NUTRITION ── */
+// (radar chart removed — replaced with inline nut cards + budget waffle)
+
+// Waffle chart (budget-based, consistent grid size)
+(function buildBudgetWaffle() {
+  // Nutrisi per 100g:
+  // Sapi: protein=18.8, lemak=14.0, karbo=0, harga=145000/kg
+  // Ayam: protein=18.2, lemak=25.0, karbo=0, harga=42000/kg
+  // Telur: protein=12.4, lemak=10.8, karbo=0.7, harga=33000/kg
+  const commodities = [
+    {label:'Daging Sapi', price:DATA.nat.sapi, protein:DATA.nutrisi[0].protein, lemak:DATA.nutrisi[0].lemak, karbo:DATA.nutrisi[0].karbo, dotColor:C.sapi},
+    {label:'Daging Ayam', price:DATA.nat.ayam, protein:DATA.nutrisi[1].protein, lemak:DATA.nutrisi[1].lemak, karbo:DATA.nutrisi[1].karbo, dotColor:C.ayam},
+    {label:'Telur Ayam',  price:DATA.nat.telur, protein:DATA.nutrisi[2].protein, lemak:DATA.nutrisi[2].lemak, karbo:DATA.nutrisi[2].karbo, dotColor:C.telur}
+  ];
+  const TOTAL_CELLS = 100;
+  const COLS = 10;
+
+  function renderWaffle(budget) {
+    const wrap = document.getElementById('sim-waffle-wrap');
+    if (!wrap) return;
+    // Compute grams per budget for each commodity, then nutrients
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">';
+    commodities.forEach(com => {
+      const grams = (budget / com.price) * 100; // grams we can buy
+      const prot = Math.min(Math.round(com.protein * grams / 100), TOTAL_CELLS);
+      const lemk = Math.min(Math.round(com.lemak * grams / 100), TOTAL_CELLS - prot);
+      const kbhdr = Math.min(Math.round(com.karbo * grams / 100), TOTAL_CELLS - prot - lemk);
+      html += `<div>
+        <div style="font-size:10.5px;font-weight:600;color:var(--brown);margin-bottom:4px;display:flex;align-items:center;gap:5px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:${com.dotColor};display:inline-block;flex-shrink:0;"></span>${com.label}
+        </div>
+        <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;">
+          ${grams.toFixed(1)}g diperoleh · Protein: <strong style="color:${com.dotColor}">${prot}g</strong>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(${COLS},1fr);gap:2px;">`;
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        let bg;
+        if (i < prot) bg = com.dotColor;
+        else if (i < prot + lemk) bg = 'var(--gold2)';
+        else if (i < prot + lemk + kbhdr) bg = 'var(--rust2)';
+        else bg = 'var(--cream3)';
+        const opacity = (i < prot + lemk + kbhdr) ? 1 : 0.3;
+        html += `<div style="aspect-ratio:1;border-radius:2px;background:${bg};opacity:${opacity};"></div>`;
+      }
+      html += '</div></div>';
+    });
+    html += '</div>';
+    wrap.innerHTML = html;
+  }
+
+  const slider = document.getElementById('budget-slider');
+  const label = document.getElementById('budget-label');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      label.textContent = 'Rp ' + (+slider.value).toLocaleString('id-ID');
+      renderWaffle(+slider.value);
+    });
+    renderWaffle(+slider.value);
+  }
+})();
+
+/* ── SCENE 6: DAYA BELI ── */
+// Horizontal dot-plot (dumbell-style)
+const affLabels = DATA.affLabels;
+const affVals   = DATA.affVals;
+
+new Chart(document.getElementById('c7a'), {
+  type: 'bar',
+  data: {
+    labels: affLabels,
+    datasets: [{
+      data: affVals,
+      backgroundColor: affVals.map(v => v >= 20 ? 'rgba(196,82,42,0.85)' : v >= 18 ? 'rgba(201,149,42,0.80)' : 'rgba(90,122,82,0.70)'),
+      borderWidth: 0,
+      borderRadius: 5,
+      barThickness: 22
+    }]
+  },
+  options: {
+    ...base,
+    indexAxis: 'y',
+    plugins: {
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(1)+'% UMP untuk penuhi 60g protein/hari (telur)'}}
+    },
+    scales: {
+      x: {
+        ticks:{color:tick,font:{family:fnt,size:10},callback:v=>v+'%'},
+        grid:{color:grid}, border:{color:'transparent'}, max:25,
+        title:{display:true,text:'% UMP yang dibutuhkan',color:tick,font:{size:9,family:fnt}}
+      },
+      y: {ticks:{color:tick,font:{family:fnt,size:10.5},weight:'500'}, grid:{color:'transparent'}, border:{color:'transparent'}}
+    }
+  }
+});
+
+
+
+/* ── SCENE 7: FORECAST — DINAMIS ── */
+const allLabels = DATA.trendLabels;
+const sapiAct   = DATA.sapiTrend;
+const sapiPrjScaled = DATA.sapiProj;
+const telurAct  = DATA.telurTrend;
+const telurPrjScaled = DATA.telurProj;
+
+const fg = 'rgba(255,255,255,0.06)', ft = 'rgba(253,250,244,0.55)';
+new Chart(document.getElementById('c8'), {
+  type: 'line',
+  data: {
+    labels: allLabels,
+    datasets: [
+      {data:sapiAct,        borderColor:C.sapi,  borderWidth:1.8, pointRadius:0, tension:.3, spanGaps:false},
+      {data:sapiPrjScaled,  borderColor:C.sapi,  borderWidth:1.8, borderDash:[5,4], pointRadius:0, tension:.3, spanGaps:false, backgroundColor:'transparent'},
+      {data:telurAct,       borderColor:'#E07040', borderWidth:1.8, pointRadius:0, tension:.3, spanGaps:false},
+      {data:telurPrjScaled, borderColor:'#E07040', borderWidth:1.8, borderDash:[5,4], pointRadius:0, tension:.3, spanGaps:false, backgroundColor:'transparent'}
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend:{display:false},
+      tooltip:{
+        mode:'index',intersect:false,
+        callbacks:{
+          label:ctx=>{
+            const names=['Sapi aktual','Sapi proyeksi','Telur aktual','Telur proyeksi'];
+            if(ctx.parsed.y===null) return null;
+            return (names[ctx.datasetIndex]||'')+': Rp'+ctx.parsed.y.toLocaleString('id-ID');
+          }
+        }
+      }
+    },
+    scales: {
+      x: {ticks:{color:ft,font:{family:fnt,size:8.5},maxTicksLimit:16,maxRotation:0}, grid:{color:fg}, border:{color:'transparent'}},
+      y: {ticks:{color:ft,font:{family:fnt,size:8.5},callback:v=>'Rp'+(v/1000).toFixed(0)+'rb'}, grid:{color:fg}, border:{color:'transparent'}}
+    }
+  }
+});
+</script>
+</body>
+</html>
