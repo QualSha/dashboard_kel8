@@ -2,6 +2,7 @@ from django.shortcuts import render
 import pandas as pd
 import json
 import os
+from django.conf import settings
 
 def dashboard(request):
     # Sesuaikan path ini dengan lokasi file Anda di komputer!
@@ -9,6 +10,8 @@ def dashboard(request):
     path_geojson = r"C:\Users\Haykal Pasha Siregar\Documents\Visualisasi Data\choropleth_map.geojson"
     
     hero_stats, scene1_kpi, map_data, chart_data, geojson_data = {}, {}, {}, {}, {}
+    scene2_metrics, scene3_metrics, scene3_insight, scene4_json = {}, {}, {}, {}
+    trend_data, seasonal_data = {}, {}
 
     try:
         # 1. BACA DATA PANGAN
@@ -147,6 +150,82 @@ def dashboard(request):
             'telur': df_nat['Telur_Ayam'].tolist()
         }
         
+       # 1. Load Dataset UMP
+        ump_path = r"C:\Users\Haykal Pasha Siregar\Documents\Visualisasi Data\dashboard_uts\dataset_ump.xlsx" 
+        ump_df = pd.read_excel(ump_path)
+        
+        # Jadikan semua nama kolom string dan hapus spasi berlebih agar aman
+        ump_df.columns = ump_df.columns.astype(str).str.strip()
+        
+        # Gunakan kolom '2025', bukan 'UMP'
+        ump_dict = dict(zip(ump_df['Province'], ump_df['2026']))
+        
+        # 2. Perhitungan Insight Scene 03 (Pola Musiman)
+        # (Asumsi df_season sudah dihitung dari rata-rata per bulan)
+        amp_sapi_raw = ((df_season['Daging_Sapi'].max() - df_season['Daging_Sapi'].min()) / df_season['Daging_Sapi'].min()) * 100
+        amp_ayam_raw = ((df_season['Daging_Ayam'].max() - df_season['Daging_Ayam'].min()) / df_season['Daging_Ayam'].min()) * 100
+        ratio_ayam_sapi = amp_ayam_raw / amp_sapi_raw if amp_sapi_raw > 0 else 0
+
+        scene3_insight = {
+            'amp_sapi': f"{amp_sapi_raw:.1f}%",
+            'amp_ayam': f"{amp_ayam_raw:.1f}%",
+            'ratio': f"{ratio_ayam_sapi:.1f}x"
+        }
+
+        # 3. Scene 04: Ketimpangan Wilayah
+        # Pemetaan Pulau untuk Scatter Plot (Sesuai desain native)
+        island_map = {
+            "Aceh": "Sumatera", "Sumatera Utara": "Sumatera", "Sumatera Barat": "Sumatera", "Riau": "Sumatera", 
+            "Kepulauan Riau": "Sumatera", "Jambi": "Sumatera", "Bengkulu": "Sumatera", "Sumatera Selatan": "Sumatera", 
+            "Bangka Belitung": "Sumatera", "Lampung": "Sumatera", 
+            "Banten": "Jawa", "Jawa Barat": "Jawa", "DKI Jakarta": "Jawa", "Jawa Tengah": "Jawa", 
+            "DI Yogyakarta": "Jawa", "Jawa Timur": "Jawa", 
+            "Bali": "Nusa Tenggara & Bali", "Nusa Tenggara Barat": "Nusa Tenggara & Bali", "Nusa Tenggara Timur": "Nusa Tenggara & Bali",
+            "Kalimantan Barat": "Kalimantan", "Kalimantan Tengah": "Kalimantan", "Kalimantan Selatan": "Kalimantan", 
+            "Kalimantan Timur": "Kalimantan", "Kalimantan Utara": "Kalimantan",
+            "Sulawesi Utara": "Sulawesi", "Gorontalo": "Sulawesi", "Sulawesi Tengah": "Sulawesi", 
+            "Sulawesi Barat": "Sulawesi", "Sulawesi Selatan": "Sulawesi", "Sulawesi Tenggara": "Sulawesi",
+            "Maluku": "Maluku & Papua", "Maluku Utara": "Maluku & Papua", "Papua Barat": "Maluku & Papua", "Papua": "Maluku & Papua"
+        }
+
+        # Ambil rata-rata harga provinsi pada periode terakhir (df_latest)
+        prov_latest = df_latest.groupby(col_prov)[['Daging_Sapi', 'Daging_Ayam', 'Telur_Ayam']].mean().reset_index()
+
+        scatter_data = []
+        for _, row in prov_latest.iterrows():
+            p = row[col_prov] # Gunakan col_prov di sini
+            if p in ump_dict:
+                scatter_data.append({
+                    "x": int(ump_dict[p]),
+                    "y": float(row['Daging_Sapi']),
+                    "label": p,
+                    "island": island_map.get(p, "Lainnya")
+                })
+
+        scene4_json = {
+            "scatter": scatter_data,
+            "lollipop": {
+                "sapi": {
+                    "max_val": float(prov_latest['Daging_Sapi'].max()),
+                    "max_prov": prov_latest.loc[prov_latest['Daging_Sapi'].idxmax(), col_prov],
+                    "min_val": float(prov_latest['Daging_Sapi'].min()),
+                    "min_prov": prov_latest.loc[prov_latest['Daging_Sapi'].idxmin(), col_prov]
+                },
+                "ayam": {
+                    "max_val": float(prov_latest['Daging_Ayam'].max()),
+                    "max_prov": prov_latest.loc[prov_latest['Daging_Ayam'].idxmax(), col_prov],
+                    "min_val": float(prov_latest['Daging_Ayam'].min()),
+                    "min_prov": prov_latest.loc[prov_latest['Daging_Ayam'].idxmin(), col_prov]
+                },
+                "telur": {
+                    "max_val": float(prov_latest['Telur_Ayam'].max()),
+                    "max_prov": prov_latest.loc[prov_latest['Telur_Ayam'].idxmax(), col_prov],
+                    "min_val": float(prov_latest['Telur_Ayam'].min()),
+                    "min_prov": prov_latest.loc[prov_latest['Telur_Ayam'].idxmin(), col_prov]
+                }
+            }
+        }
+        
     except Exception as e:
         print(f"Error pada views: {e}")
 
@@ -154,12 +233,14 @@ def dashboard(request):
         'hero': hero_stats,
         'scene1_kpi': scene1_kpi,
         'scene2': scene2_metrics,
-        'trend_json': json.dumps(trend_data),
+        'trend_json': json.dumps(trend_data) if trend_data else "{}",
         'scene3_metrics': scene3_metrics,
-        'seasonal_json': json.dumps(seasonal_data),
-        'map_data_json': json.dumps(map_data),
-        'chart_data_json': json.dumps(chart_data),
-        'geojson_data': json.dumps(geojson_data) # Mengirim GeoJSON ke template
+        'scene3_insight': scene3_insight,
+        'scene4_json': json.dumps(scene4_json) if scene4_json else "{}",
+        'seasonal_json': json.dumps(seasonal_data) if seasonal_data else "{}",
+        'map_data_json': json.dumps(map_data) if map_data else "{}",
+        'chart_data_json': json.dumps(chart_data) if chart_data else "{}",
+        'geojson_data': json.dumps(geojson_data) if geojson_data else "{}"
     }
     
     return render(request, 'dashboard.html', context)

@@ -455,11 +455,48 @@
             </div>
             <div style="margin-top:12px;font-size:10px;color:var(--text3);line-height:1.5;">Pergerakan volatilitas harga per bulan kalender.</div>
           </div>
+
+          
+
+        </div>
+
+        <div class="insight reveal" style="margin-top:12px;">
+          <strong>Amplitudo musiman ayam ({{ scene3_insight.amp_ayam }}) hampir {{ scene3_insight.ratio }} lebih besar dari sapi ({{ scene3_insight.amp_sapi }})</strong>: konsekuensi dari rantai pasok yang lebih pendek dan langsung terpengaruh permintaan. Ramadan dan Lebaran adalah penentu tunggal terbesar pergerakan harga ayam.
         </div>
       </div>
     </div>
+
+    
   </section>
 
+  <section class="section sec-white" id="s5" data-label="Ketimpangan">
+    <div class="section-inner">
+    <div class="container">
+      <div class="reveal">
+        <div class="eyebrow">Ketimpangan Wilayah</div>
+        <h2 class="sec-title">UMP rendah, harga tinggi:<br><em>double burden</em></h2>
+        <p class="sec-lead">Provinsi dengan upah minimum rendah justru cenderung membayar harga pangan yang lebih tinggi akibat rantai distribusi yang panjang.</p>
+      </div>
+
+      <div class="grid2 reveal">
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">Harga sapi vs UMP provinsi (setiap titik = 1 provinsi)</div>
+          <div class="chart-area" style="height:280px;"><canvas id="c4a"></canvas></div>
+        </div>
+        <div class="chart-card" style="margin-bottom:0;">
+          <div class="chart-label">Gap harga maks - min antar provinsi per komoditas April 2026 (Rp/kg)</div>
+          <div id="gap-lollipop" style="padding:24px 0;"></div>
+        </div>
+      </div>
+
+
+      <div class="story-callout reveal" style="margin-top:16px;">
+        Titik-titik di kanan bawah scatter plot menandakan provinsi dengan UMP tinggi dan harga sapi tidak ikut tinggi, seperti DKI Jakarta dan Kepulauan Riau. Sebaliknya, beberapa provinsi Jawa dengan UMP terendah membayar harga sapi di kisaran Rp 139.000–155.000.
+      </div>
+
+    </div>
+    </div>
+  </section>
 
 </div>
 
@@ -592,20 +629,7 @@ if(chartData.sapi) makeBar('c2a', chartData.sapi.labels, chartData.sapi.data, C.
 if(chartData.ayam) makeBar('c2b', chartData.ayam.labels, chartData.ayam.data, C.ayam, 'rgba(201,149,42,0.28)');
 if(chartData.telur) makeBar('c2c', chartData.telur.labels, chartData.telur.data, C.telur, 'rgba(196,82,42,0.28)');
 
-// Tambahkan setting geo untuk memaksa zoom melihat seluruh Indonesia
-const layoutUpdate = {
-    geo: {
-        lonaxis: { range: [94, 142] }, // Rentang Bujur Indonesia
-        lataxis: { range: [-11, 7] },   // Rentang Lintang Indonesia
-        projection: { type: 'mercator' }
-    }
-};
 
-if(sapiFig.data) {
-    Object.assign(sapiFig.layout, layoutUpdate); // Terapkan manual zoom
-    Plotly.newPlot('plotly-sapi', sapiFig.data, sapiFig.layout, config);
-}
-// Lakukan hal yang sama untuk ayamFig dan telurFig
 
 </script>
 
@@ -769,6 +793,120 @@ const seasonalData = {{ seasonal_json|safe }};
   html += '</tbody></table></div>';
   hmContainer.innerHTML = html;
 })();
+</script>
+
+<script>
+const scene4Data = {{ scene4_json|safe }};
+
+if (scene4Data && scene4Data.scatter) {
+  // Konstanta Styling Chart (disesuaikan dengan native.html)
+  const tickColor = '#9A8060';
+  const gridColor = 'rgba(92,61,30,0.055)';
+  const fontFamily = "'DM Sans', sans-serif";
+
+  // 1. Scatter Plot (Sapi vs UMP)
+  const islandColors = {
+    'Jawa': '#C4522A', 'Sumatera': '#C9952A', 'Kalimantan': '#5A7A52',
+    'Sulawesi': '#6B7FBF', 'Maluku & Papua': '#9B5E9B', 'Nusa Tenggara & Bali': '#2A9BC4'
+  };
+  
+  const islandBg = {
+    'Jawa': 'rgba(196,82,42,0.75)', 'Sumatera': 'rgba(201,149,42,0.75)', 'Kalimantan': 'rgba(90,122,82,0.75)',
+    'Sulawesi': 'rgba(107,127,191,0.75)', 'Maluku & Papua': 'rgba(155,94,155,0.75)', 'Nusa Tenggara & Bali': 'rgba(42,155,196,0.75)'
+  };
+
+  const ctx4a = document.getElementById('c4a').getContext('2d');
+  new Chart(ctx4a, {
+    type: 'scatter',
+    data: {
+      datasets: Object.keys(islandColors).map(island => {
+        const dataIsland = scene4Data.scatter.filter(d => d.island === island);
+        return {
+          label: island,
+          data: dataIsland,
+          backgroundColor: islandBg[island],
+          borderColor: islandColors[island],
+          borderWidth: 1.5,
+          pointRadius: 6,
+          pointHoverRadius: 9
+        };
+      }).filter(ds => ds.data.length > 0)
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+            display: true, 
+            position: 'bottom', 
+            labels: { font: { family: fontFamily, size: 9.5 }, color: tickColor, boxWidth: 9, padding: 10, usePointStyle: true, pointStyle: 'circle' } 
+        },
+        tooltip: { 
+            callbacks: { 
+                label: (ctx) => `${ctx.raw.label} — UMP: Rp ${(ctx.raw.x/1e6).toFixed(1)}jt | Sapi: Rp ${(ctx.raw.y/1000).toFixed(0)}rb` 
+            } 
+        }
+      },
+      scales: {
+        x: { 
+            title: { display: true, text: 'UMP 2026 (Rp/bulan)', color: tickColor, font: { size: 9, family: fontFamily } }, 
+            ticks: { color: tickColor, font: { family: fontFamily, size: 9 }, callback: v => 'Rp' + (v/1e6).toFixed(1) + 'jt' },
+            grid: { color: gridColor },
+            border: { color: 'transparent' }
+        },
+        y: { 
+            title: { display: true, text: 'Harga Sapi Apr 2026 (Rp/kg)', color: tickColor, font: { size: 9, family: fontFamily } }, 
+            min: 100000, max: 180000,
+            ticks: { color: tickColor, font: { family: fontFamily, size: 9 }, callback: v => 'Rp' + (v/1000).toFixed(0) + 'rb' },
+            grid: { color: gridColor },
+            border: { color: 'transparent' }
+        }
+      }
+    }
+  });
+
+  // 2. Gap Lollipop Generator
+  const wrap = document.getElementById('gap-lollipop');
+  if (wrap && scene4Data.lollipop) {
+      const items = [
+        { label: 'Daging Sapi', data: scene4Data.lollipop.sapi, color: '#5A7A52' },
+        { label: 'Daging Ayam', data: scene4Data.lollipop.ayam, color: '#C9952A' },
+        { label: 'Telur Ayam',  data: scene4Data.lollipop.telur, color: '#C4522A' }
+      ];
+      
+      // Sesuaikan key .max menjadi .max_val
+      const maxDataValue = Math.max(...items.map(i => i.data.max_val));
+      const baseMax = Math.ceil(maxDataValue / 10000) * 10000 + 10000; 
+
+      let html = '<div style="padding:8px 0;">';
+      items.forEach(item => {
+        // Gunakan key _val sesuai dengan data baru dari views.py
+        const gap = item.data.max_val - item.data.min_val;
+        const pMin = (item.data.min_val / baseMax * 100).toFixed(1);
+        const pMax = (item.data.max_val / baseMax * 100).toFixed(1);
+        
+        html += `
+          <div style="margin-bottom:22px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-size:11.5px;color:var(--text2);">${item.label}</span>
+              <span style="font-family:'DM Mono', monospace;font-size:10px;color:var(--text2);">Gap: Rp ${gap.toLocaleString('id-ID')}</span>
+            </div>
+            <div style="position:relative;height:16px;display:flex;align-items:center;">
+              <div style="position:absolute;left:0;right:0;height:2px;background:var(--cream3);border-radius:1px;"></div>
+              <div style="position:absolute;left:${pMin}%;width:${pMax-pMin}%;height:2px;background:${item.color};border-radius:1px;"></div>
+              
+              <div style="position:absolute;left:${pMin}%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:#5A7A52;box-shadow:0 0 0 2px #fff;cursor:help;" 
+                   title="Termurah: ${item.data.min_prov} (Rp ${item.data.min_val.toLocaleString('id-ID')})"></div>
+                   
+              <div style="position:absolute;left:${pMax}%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:${item.color};box-shadow:0 0 0 2px #fff;cursor:help;" 
+                   title="Termahal: ${item.data.max_prov} (Rp ${item.data.max_val.toLocaleString('id-ID')})"></div>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+      wrap.innerHTML = html;
+  }
+
+}
 </script>
 
 {% endblock content %}
